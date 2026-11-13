@@ -3,22 +3,25 @@
 namespace App\Models;
 
 use App\Enums\PickupStatus;
+use App\Models\Concerns\CanBeTakenInCharge;
 use Database\Factories\PickupRequestFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Demande de collecte (grande quantité de déchets, encombrants…).
+ * Demande de collecte (beaucoup de déchets, encombrants…), ramassée par un volontaire.
  */
 class PickupRequest extends Model
 {
+    use CanBeTakenInCharge;
+
     /** @use HasFactory<PickupRequestFactory> */
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'village_id', 'description', 'latitude', 'longitude', 'preferred_date',
-        'status', 'truck_id', 'appointment_at', 'done_at', 'admin_note',
+        'user_id', 'village_id', 'description', 'latitude', 'longitude', 'preferred_date', 'status',
+        'taken_by_id', 'association_id', 'appointment_at', 'taker_note', 'done_at', 'admin_note',
     ];
 
     protected function casts(): array
@@ -43,8 +46,8 @@ class PickupRequest extends Model
         return $this->belongsTo(Village::class);
     }
 
-    public function truck(): BelongsTo
+    public function appointmentLabel(): ?string
     {
-        return $this->belongsTo(Truck::class);
+        return $this->appointment_at ? 'Passage prévu '.$this->appointment_at->translatedFormat('l j F à H\hi') : null;
     }
 }

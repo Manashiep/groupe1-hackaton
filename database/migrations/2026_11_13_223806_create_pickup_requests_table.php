@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Demandes de collecte (grande quantité de déchets, encombrants…).
+     * Demandes de collecte (beaucoup de déchets, encombrants…), prises en charge
+     * par un citoyen ou une association.
      */
     public function up(): void
     {
@@ -20,8 +21,10 @@ return new class extends Migration
             $table->decimal('longitude', 10, 7);
             $table->date('preferred_date')->nullable();
             $table->string('status', 20)->default('en_attente')->index();
-            $table->foreignId('truck_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('taken_by_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('association_id')->nullable()->constrained()->nullOnDelete();
             $table->dateTime('appointment_at')->nullable();
+            $table->string('taker_note', 300)->nullable();
             $table->timestamp('done_at')->nullable();
             $table->string('admin_note', 500)->nullable();
             $table->timestamps();

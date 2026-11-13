@@ -6,24 +6,24 @@ use App\Enums\Role;
 use Database\Factories\TruckFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
- * Camion poubelle affecté par la mairie à un village.
+ * Camion poubelle de la mairie : il ne passe qu'aux heures de son calendrier, dans ses villages.
  */
 class Truck extends Model
 {
     /** @use HasFactory<TruckFactory> */
     use HasFactory;
 
-    protected $fillable = ['name', 'plate', 'village_id', 'color'];
+    protected $fillable = ['name', 'plate', 'color'];
 
-    public function village(): BelongsTo
+    public function villages(): BelongsToMany
     {
-        return $this->belongsTo(Village::class);
+        return $this->belongsToMany(Village::class)->orderBy('name');
     }
 
     public function agents(): HasMany
@@ -41,40 +41,23 @@ class Truck extends Model
         return $this->hasMany(RouteStop::class)->orderBy('position');
     }
 
-    public function reports(): HasMany
-    {
-        return $this->hasMany(Report::class);
-    }
-
-    public function pickupRequests(): HasMany
-    {
-        return $this->hasMany(PickupRequest::class);
-    }
-
     public function complaints(): HasMany
     {
         return $this->hasMany(TruckComplaint::class);
     }
 
-    public function scheduleOn(Carbon $date): ?TruckSchedule
+    public function notices(): HasMany
     {
-        return $this->schedules->firstWhere('day_of_week', $date->dayOfWeekIso);
+        return $this->hasMany(TruckNotice::class)->latest();
     }
 
     /**
-     * Prochains jours de passage du camion.
+     * Créneaux du camion pour une journée (un par village desservi).
      *
-     * @return Collection<int, array{date: Carbon, schedule: TruckSchedule}>
+     * @return Collection<int, TruckSchedule>
      */
-    public function upcomingPassages(int $days = 14): Collection
+    public function schedulesOn(Carbon $date): Collection
     {
-        return collect(range(0, $days - 1))
-            ->map(fn (int $offset): Carbon => today()->addDays($offset))
-            ->map(fn (Carbon $date): ?array => ($schedule = $this->scheduleOn($date)) ? ['date' => $date, 'schedule' => $schedule] : null)
-            ->filter()
-            ->reject(fn (array $passage): bool => $passage['date']->copy()
-                ->setTimeFromTimeString($passage['schedule']->end_time ?? $passage['schedule']->start_time)
-                ->isPast())
-            ->values();
+        return $this->schedules->where('day_of_week', $date->dayOfWeekIso)->sortBy('start_time')->values();
     }
 }

@@ -16,7 +16,7 @@ enum ReportStatus: string implements HasColor, HasLabel
     public function getLabel(): string
     {
         return match ($this) {
-            self::Nouveau => 'Nouveau',
+            self::Nouveau => 'À nettoyer',
             self::PrisEnCharge => 'Pris en charge',
             self::EnCours => 'Nettoyage en cours',
             self::Nettoye => 'Nettoyé',
@@ -35,15 +35,15 @@ enum ReportStatus: string implements HasColor, HasLabel
         };
     }
 
-    /** Couleur des marqueurs sur la carte. */
+    /** Couleur de la pastille (carte, listes). */
     public function hex(): string
     {
         return match ($this) {
-            self::Nouveau => '#dc2626',
-            self::PrisEnCharge => '#d97706',
-            self::EnCours => '#2563eb',
-            self::Nettoye => '#16a34a',
-            self::Rejete => '#6b7280',
+            self::Nouveau => '#d64a32',
+            self::PrisEnCharge => '#d9941c',
+            self::EnCours => '#3567c4',
+            self::Nettoye => '#2e8b57',
+            self::Rejete => '#7c8781',
         };
     }
 

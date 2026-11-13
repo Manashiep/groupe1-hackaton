@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Villages (ou quartiers) et camions affectés par la mairie.
+     * Villages, camions de la mairie (un camion peut desservir plusieurs villages) et profils.
      */
     public function up(): void
     {
@@ -25,9 +25,15 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('plate')->nullable();
-            $table->foreignId('village_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('color', 7)->default('#0f766e');
+            $table->string('color', 7)->default('#1d6b47');
             $table->timestamps();
+        });
+
+        Schema::create('truck_village', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('truck_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('village_id')->constrained()->cascadeOnDelete();
+            $table->unique(['truck_id', 'village_id']);
         });
 
         Schema::table('users', function (Blueprint $table) {
@@ -46,6 +52,7 @@ return new class extends Migration
             $table->dropConstrainedForeignId('village_id');
             $table->dropColumn(['phone', 'role', 'is_active']);
         });
+        Schema::dropIfExists('truck_village');
         Schema::dropIfExists('trucks');
         Schema::dropIfExists('villages');
     }

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Signalements de dépôts sauvages, avec la prise en charge par un camion.
+     * Signalements de dépôts sauvages, pris en charge par un citoyen ou une association.
      */
     public function up(): void
     {
@@ -20,8 +20,10 @@ return new class extends Migration
             $table->decimal('latitude', 10, 7);
             $table->decimal('longitude', 10, 7);
             $table->string('status', 20)->default('nouveau')->index();
-            $table->foreignId('truck_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('taken_by_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('association_id')->nullable()->constrained()->nullOnDelete();
             $table->dateTime('cleanup_at')->nullable();
+            $table->string('taker_note', 300)->nullable();
             $table->timestamp('cleaned_at')->nullable();
             $table->string('admin_note', 500)->nullable();
             $table->timestamps();

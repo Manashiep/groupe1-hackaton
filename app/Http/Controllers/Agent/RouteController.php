@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers\Agent;
 
-use App\Enums\PickupStatus;
-use App\Enums\ReportStatus;
+use App\Enums\NoticeKind;
 use App\Http\Controllers\Controller;
 use App\Models\RouteStop;
 use App\Models\RouteStopVisit;
@@ -12,38 +11,28 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Tournée du jour de l'agent : points de collecte placés par le responsable et missions de nettoyage.
+ * Tournée du jour : villages et horaires, points de collecte posés par le responsable, alertes.
  */
 class RouteController extends Controller
 {
     public function index(Request $request): View
     {
-        $truck = $request->user()->truck?->load(['schedules', 'stops', 'village']);
+        $truck = $request->user()->truck?->load(['schedules.village', 'stops', 'villages']);
 
         if (! $truck) {
             return view('agent.route', ['truck' => null]);
         }
 
-        $visited = RouteStopVisit::whereIn('route_stop_id', $truck->stops->pluck('id'))
-            ->whereDate('visit_date', today())
-            ->pluck('route_stop_id')
-            ->all();
-
         return view('agent.route', [
             'truck' => $truck,
-            'schedule' => $truck->scheduleOn(today()),
+            'slots' => $truck->schedulesOn(today()),
             'stops' => $truck->stops,
-            'visited' => $visited,
-            'reports' => $truck->reports()
-                ->whereIn('status', [ReportStatus::PrisEnCharge, ReportStatus::EnCours])
-                ->whereDate('cleanup_at', '<=', today())
-                ->orderBy('cleanup_at')
-                ->get(),
-            'pickups' => $truck->pickupRequests()
-                ->where('status', PickupStatus::Acceptee)
-                ->whereDate('appointment_at', '<=', today())
-                ->orderBy('appointment_at')
-                ->get(),
+            'visited' => RouteStopVisit::whereIn('route_stop_id', $truck->stops->pluck('id'))
+                ->whereDate('visit_date', today())
+                ->pluck('route_stop_id')
+                ->all(),
+            'notices' => $truck->notices()->recent()->get(),
+            'kinds' => NoticeKind::cases(),
         ]);
     }
 

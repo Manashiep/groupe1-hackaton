@@ -1,10 +1,13 @@
 <?php
 
 use App\Http\Controllers\Agent;
+use App\Http\Controllers\AssociationController;
+use App\Http\Controllers\AssociationManagementController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\PickupRequestController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TruckCalendarController;
 use App\Http\Controllers\TruckComplaintController;
@@ -22,33 +25,57 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/deconnexion', [LoginController::class, 'destroy'])->name('logout');
 
-    // Citoyens et agents de collecte : signaler, suivre ses signalements, demander une collecte.
+    // Citoyens et agents : carte, signalements, demandes de collecte, associations, profil.
     Route::middleware('role:citoyen,agent')->group(function () {
         Route::get('/carte', [MapController::class, 'index'])->name('map');
+        Route::get('/moi', [ProfileController::class, 'index'])->name('profile');
 
         Route::get('/signaler', [ReportController::class, 'create'])->name('reports.create');
         Route::post('/signaler', [ReportController::class, 'store'])->name('reports.store');
-        Route::get('/mes-signalements', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/signalements/{report}', [ReportController::class, 'show'])->name('reports.show');
+        Route::post('/signalements/{report}/prendre', [ReportController::class, 'take'])->name('reports.take');
+        Route::post('/signalements/{report}/commencer', [ReportController::class, 'start'])->name('reports.start');
+        Route::post('/signalements/{report}/reporter', [ReportController::class, 'postpone'])->name('reports.postpone');
+        Route::post('/signalements/{report}/termine', [ReportController::class, 'finish'])->name('reports.finish');
+        Route::post('/signalements/{report}/abandonner', [ReportController::class, 'release'])->name('reports.release');
 
-        Route::get('/demandes', [PickupRequestController::class, 'index'])->name('pickups.index');
         Route::get('/demandes/nouvelle', [PickupRequestController::class, 'create'])->name('pickups.create');
         Route::post('/demandes', [PickupRequestController::class, 'store'])->name('pickups.store');
+        Route::get('/demandes/{pickup}', [PickupRequestController::class, 'show'])->name('pickups.show');
+        Route::post('/demandes/{pickup}/prendre', [PickupRequestController::class, 'take'])->name('pickups.take');
+        Route::post('/demandes/{pickup}/reporter', [PickupRequestController::class, 'postpone'])->name('pickups.postpone');
+        Route::post('/demandes/{pickup}/termine', [PickupRequestController::class, 'finish'])->name('pickups.finish');
+        Route::post('/demandes/{pickup}/abandonner', [PickupRequestController::class, 'release'])->name('pickups.release');
+
+        Route::get('/associations', [AssociationController::class, 'index'])->name('associations.index');
+        Route::get('/associations/creer', [AssociationController::class, 'create'])->name('associations.create');
+        Route::post('/associations', [AssociationController::class, 'store'])->name('associations.store');
+        Route::get('/associations/{association}', [AssociationController::class, 'show'])->name('associations.show');
+        Route::post('/associations/{association}/rejoindre', [AssociationController::class, 'join'])->name('associations.join');
+        Route::delete('/associations/{association}/quitter', [AssociationController::class, 'leave'])->name('associations.leave');
+
+        // Espace du chef de groupe.
+        Route::prefix('associations/{association}/gerer')->name('associations.manage.')->group(function () {
+            Route::get('/', [AssociationManagementController::class, 'show'])->name('show');
+            Route::patch('/', [AssociationManagementController::class, 'update'])->name('update');
+            Route::post('/publications', [AssociationManagementController::class, 'storePost'])->name('posts.store');
+            Route::delete('/publications/{post}', [AssociationManagementController::class, 'destroyPost'])->name('posts.destroy');
+            Route::post('/adhesions/{membership}/accepter', [AssociationManagementController::class, 'acceptMember'])->name('members.accept');
+            Route::post('/adhesions/{membership}/refuser', [AssociationManagementController::class, 'refuseMember'])->name('members.refuse');
+        });
     });
 
-    // Citoyens : calendrier du camion de leur village et signalement d'un problème de camion.
+    // Citoyens : calendrier des camions par village et signalement d'un problème de camion.
     Route::middleware('role:citoyen')->group(function () {
         Route::get('/camion', [TruckCalendarController::class, 'index'])->name('trucks.index');
         Route::post('/camion/{truck}/probleme', [TruckComplaintController::class, 'store'])->name('trucks.complaints.store');
     });
 
-    // Agents de collecte : tournée du jour et planning.
+    // Agents de collecte : tournée, planning et alertes aux habitants.
     Route::middleware('role:agent')->prefix('agent')->name('agent.')->group(function () {
         Route::get('/tournee', [Agent\RouteController::class, 'index'])->name('route');
         Route::post('/tournee/points/{stop}', [Agent\RouteController::class, 'toggleStop'])->name('stops.toggle');
         Route::get('/planning', [Agent\PlanningController::class, 'index'])->name('planning');
-
-        Route::post('/signalements/{report}/demarrer', [Agent\MissionController::class, 'startReport'])->name('reports.start');
-        Route::post('/signalements/{report}/nettoye', [Agent\MissionController::class, 'finishReport'])->name('reports.finish');
-        Route::post('/demandes/{pickup}/effectuee', [Agent\MissionController::class, 'finishPickup'])->name('pickups.finish');
+        Route::post('/alertes', [Agent\TruckNoticeController::class, 'store'])->name('notices.store');
     });
 });

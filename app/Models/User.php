@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Enums\MembershipStatus;
 use App\Enums\Role;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -53,6 +55,51 @@ class User extends Authenticatable implements FilamentUser
     public function pickupRequests(): HasMany
     {
         return $this->hasMany(PickupRequest::class);
+    }
+
+    /** Signalements que ce citoyen s'est engagé à nettoyer. */
+    public function takenReports(): HasMany
+    {
+        return $this->hasMany(Report::class, 'taken_by_id');
+    }
+
+    /** Demandes de collecte que ce citoyen s'est engagé à ramasser. */
+    public function takenPickups(): HasMany
+    {
+        return $this->hasMany(PickupRequest::class, 'taken_by_id');
+    }
+
+    public function memberships(): HasMany
+    {
+        return $this->hasMany(Membership::class);
+    }
+
+    /** Associations dont il est membre (adhésion acceptée). */
+    public function associations(): BelongsToMany
+    {
+        return $this->belongsToMany(Association::class)
+            ->withPivot('status')
+            ->withTimestamps()
+            ->wherePivot('status', MembershipStatus::Membre->value);
+    }
+
+    public function ledAssociations(): HasMany
+    {
+        return $this->hasMany(Association::class, 'leader_id');
+    }
+
+    /** Association active qu'il dirige, s'il en a une. */
+    public function activeLedAssociation(): ?Association
+    {
+        return $this->ledAssociations()->active()->first();
+    }
+
+    /** « Nadia A. » : prénom et initiale, pour l'affichage public. */
+    public function shortName(): string
+    {
+        $parts = explode(' ', trim($this->name));
+
+        return $parts[0].(isset($parts[1]) ? ' '.mb_substr($parts[1], 0, 1).'.' : '');
     }
 
     public function hasRole(Role ...$roles): bool

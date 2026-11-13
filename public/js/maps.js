@@ -1,4 +1,4 @@
-/* Aides Leaflet partagées par les écrans habitants et agents. */
+/* Aides partagées : cartes Leaflet et compression des photos avant envoi. */
 window.CC = window.CC || {};
 
 (function (CC) {
@@ -23,8 +23,13 @@ window.CC = window.CC || {};
         return map;
     };
 
-    CC.pin = function (color) {
-        return L.divIcon({ className: '', html: '<div class="pin" style="background:' + color + '"></div>', iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -10] });
+    /** Rond pour un dépôt sauvage, carré pour une demande de collecte. */
+    CC.pin = function (color, square) {
+        return L.divIcon({
+            className: '',
+            html: '<div class="pin' + (square ? ' pin-square' : '') + '" style="background:' + color + '"></div>',
+            iconSize: [22, 22], iconAnchor: [11, 11], popupAnchor: [0, -12],
+        });
     };
 
     CC.numberPin = function (n, color) {
@@ -42,7 +47,7 @@ window.CC = window.CC || {};
         map._ccFit = { latlngs, maxZoom };
         // Sans animation : un redimensionnement pendant l'animation l'annulerait.
         if (latlngs.length === 1) { map.setView(latlngs[0], maxZoom || 16, { animate: false }); return; }
-        map.fitBounds(L.latLngBounds(latlngs), { padding: [40, 40], maxZoom: maxZoom || 16, animate: false });
+        map.fitBounds(L.latLngBounds(latlngs), { padding: [48, 48], maxZoom: maxZoom || 16, animate: false });
     };
 
     CC.locate = function (onSuccess, onError) {
@@ -73,7 +78,7 @@ window.CC = window.CC || {};
             } else {
                 marker.setLatLng(latlng);
             }
-            status.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Endroit enregistré — vous pouvez déplacer le repère.';
+            status.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Endroit enregistré. Glissez le repère pour l\'ajuster.';
         }
 
         if (lat.value && lng.value) {
@@ -88,5 +93,31 @@ window.CC = window.CC || {};
 
         map.on('click', (e) => set(e.latlng));
         return map;
+    };
+
+    /**
+     * Réduit une photo (1600 px, JPEG 80 %) avant l'envoi : plus rapide en 3G et sous la limite du serveur.
+     */
+    CC.compressPhotoInput = function (input, onPreview) {
+        input.addEventListener('change', async () => {
+            const file = input.files[0];
+            if (!file || !file.type.startsWith('image/')) return;
+            onPreview && onPreview(URL.createObjectURL(file));
+            try {
+                const bitmap = await createImageBitmap(file);
+                const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(bitmap.width * scale);
+                canvas.height = Math.round(bitmap.height * scale);
+                canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+                const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+                if (!blob || blob.size >= file.size) return;
+                const transfer = new DataTransfer();
+                transfer.items.add(new File([blob], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }));
+                input.files = transfer.files;
+            } catch (e) {
+                // Navigateur trop ancien : on envoie la photo d'origine.
+            }
+        });
     };
 })(window.CC);

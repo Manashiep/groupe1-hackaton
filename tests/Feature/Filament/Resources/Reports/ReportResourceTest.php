@@ -5,7 +5,6 @@ namespace Tests\Feature\Filament\Resources\Reports;
 use App\Enums\ReportStatus;
 use App\Filament\Resources\Reports\Pages\ManageReports;
 use App\Models\Report;
-use App\Models\Truck;
 use App\Models\User;
 use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,24 +22,18 @@ class ReportResourceTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_responsable_takes_a_report_in_charge_with_a_truck_and_time(): void
+    public function test_responsable_rejects_a_report_with_a_reason(): void
     {
         $report = Report::factory()->create();
-        $truck = Truck::factory()->create();
-        $cleanupAt = today()->addDay()->setTime(9, 30);
         $this->actingAs(User::factory()->responsable()->create());
 
         Livewire::test(ManageReports::class)
-            ->callAction(TestAction::make('assign')->table($report), data: [
-                'truck_id' => $truck->id,
-                'cleanup_at' => $cleanupAt,
-            ])
+            ->callAction(TestAction::make('reject')->table($report), data: ['admin_note' => 'Doublon'])
             ->assertHasNoFormErrors();
 
         $report->refresh();
-        $this->assertSame(ReportStatus::PrisEnCharge, $report->status);
-        $this->assertTrue($report->truck->is($truck));
-        $this->assertTrue($report->cleanup_at->equalTo($cleanupAt));
+        $this->assertSame(ReportStatus::Rejete, $report->status);
+        $this->assertSame('Doublon', $report->admin_note);
     }
 
     public function test_rejecting_a_report_requires_a_reason(): void

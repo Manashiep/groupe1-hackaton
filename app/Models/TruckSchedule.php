@@ -6,7 +6,11 @@ use Database\Factories\TruckScheduleFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * Créneau de ramassage : tel camion passe dans tel village tel jour à telle heure.
+ */
 class TruckSchedule extends Model
 {
     /** @use HasFactory<TruckScheduleFactory> */
@@ -18,7 +22,7 @@ class TruckSchedule extends Model
         5 => 'Vendredi', 6 => 'Samedi', 7 => 'Dimanche',
     ];
 
-    protected $fillable = ['truck_id', 'day_of_week', 'start_time', 'end_time'];
+    protected $fillable = ['truck_id', 'village_id', 'day_of_week', 'start_time', 'end_time'];
 
     protected function casts(): array
     {
@@ -28,6 +32,11 @@ class TruckSchedule extends Model
     public function truck(): BelongsTo
     {
         return $this->belongsTo(Truck::class);
+    }
+
+    public function village(): BelongsTo
+    {
+        return $this->belongsTo(Village::class);
     }
 
     public function dayLabel(): string
@@ -40,5 +49,17 @@ class TruckSchedule extends Model
         $start = substr($this->start_time, 0, 5);
 
         return $this->end_time ? $start.' – '.substr($this->end_time, 0, 5) : 'dès '.$start;
+    }
+
+    /** Prochaine date de ce créneau qui n'est pas encore terminée. */
+    public function nextOccurrence(): Carbon
+    {
+        $candidate = today();
+        while ($candidate->dayOfWeekIso !== $this->day_of_week
+            || $candidate->copy()->setTimeFromTimeString($this->end_time ?? $this->start_time)->isPast()) {
+            $candidate->addDay();
+        }
+
+        return $candidate;
     }
 }

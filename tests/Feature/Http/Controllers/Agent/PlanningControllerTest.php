@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Http\Controllers\Agent;
 
-use App\Models\Report;
 use App\Models\Truck;
 use App\Models\TruckSchedule;
 use App\Models\User;
+use App\Models\Village;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,18 +13,19 @@ class PlanningControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_lists_route_days_and_missions_for_the_next_seven_days(): void
+    public function test_lists_each_days_villages_for_the_next_seven_days(): void
     {
         $truck = Truck::factory()->create();
         $tomorrow = today()->addDay();
-        TruckSchedule::factory()->for($truck)->create(['day_of_week' => $tomorrow->dayOfWeekIso, 'start_time' => '06:30', 'end_time' => '08:00']);
-        Report::factory()->assigned($truck)->create(['cleanup_at' => $tomorrow->copy()->setTime(15, 0)]);
+        TruckSchedule::factory()->for($truck)->for(Village::factory()->create(['name' => 'Itsandra']))
+            ->create(['day_of_week' => $tomorrow->dayOfWeekIso, 'start_time' => '06:30', 'end_time' => '08:00']);
 
         $this->actingAs(User::factory()->agent($truck)->create())
             ->get(route('agent.planning'))
             ->assertOk()
-            ->assertViewHas('days', fn ($days): bool => $days[1]['schedule']?->start_time === '06:30:00'
-                && $days[1]['missions']->count() === 1
-                && $days[0]['missions']->isEmpty());
+            ->assertSee('Itsandra')
+            ->assertViewHas('days', fn ($days): bool => $days->count() === 7
+                && $days[1]['slots']->count() === 1
+                && $days[0]['slots']->isEmpty());
     }
 }

@@ -8,25 +8,25 @@ use Filament\Support\Contracts\HasLabel;
 enum PickupStatus: string implements HasColor, HasLabel
 {
     case EnAttente = 'en_attente';
-    case Acceptee = 'acceptee';
+    case PriseEnCharge = 'prise_en_charge';
     case Effectuee = 'effectuee';
     case Refusee = 'refusee';
 
     public function getLabel(): string
     {
         return match ($this) {
-            self::EnAttente => 'En attente',
-            self::Acceptee => 'Rendez-vous fixé',
-            self::Effectuee => 'Collecte effectuée',
-            self::Refusee => 'Refusée',
+            self::EnAttente => 'Cherche un volontaire',
+            self::PriseEnCharge => 'Prise en charge',
+            self::Effectuee => 'Collecte faite',
+            self::Refusee => 'Refusée par la mairie',
         };
     }
 
     public function getColor(): string
     {
         return match ($this) {
-            self::EnAttente => 'warning',
-            self::Acceptee => 'info',
+            self::EnAttente => 'danger',
+            self::PriseEnCharge => 'warning',
             self::Effectuee => 'success',
             self::Refusee => 'gray',
         };
@@ -35,10 +35,10 @@ enum PickupStatus: string implements HasColor, HasLabel
     public function hex(): string
     {
         return match ($this) {
-            self::EnAttente => '#d97706',
-            self::Acceptee => '#2563eb',
-            self::Effectuee => '#16a34a',
-            self::Refusee => '#6b7280',
+            self::EnAttente => '#d64a32',
+            self::PriseEnCharge => '#d9941c',
+            self::Effectuee => '#2e8b57',
+            self::Refusee => '#7c8781',
         };
     }
 }

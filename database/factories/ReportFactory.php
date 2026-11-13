@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Enums\ReportStatus;
 use App\Models\Report;
-use App\Models\Truck;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -28,14 +27,14 @@ class ReportFactory extends Factory
     }
 
     /**
-     * Signalement pris en charge par un camion, nettoyage prévu demain matin.
+     * Pris en charge par un citoyen, nettoyage prévu demain matin.
      */
-    public function assigned(?Truck $truck = null): static
+    public function takenBy(?User $taker = null): static
     {
         return $this->state(fn (array $attributes): array => [
             'status' => ReportStatus::PrisEnCharge,
-            'truck_id' => $truck?->id ?? Truck::factory(),
-            'cleanup_at' => today()->addDay()->setTime(9, 0),
+            'taken_by_id' => $taker?->id ?? User::factory(),
+            'cleanup_at' => today()->addDay()->setTime(8, 0),
         ]);
     }
 }

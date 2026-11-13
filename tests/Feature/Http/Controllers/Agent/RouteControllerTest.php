@@ -2,10 +2,11 @@
 
 namespace Tests\Feature\Http\Controllers\Agent;
 
-use App\Models\Report;
 use App\Models\RouteStop;
 use App\Models\Truck;
+use App\Models\TruckSchedule;
 use App\Models\User;
+use App\Models\Village;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,19 +14,19 @@ class RouteControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_shows_the_stops_and_todays_missions_of_the_agents_truck(): void
+    public function test_shows_todays_villages_and_the_route_stops(): void
     {
         $truck = Truck::factory()->create();
+        $village = Village::factory()->create(['name' => 'Hadouja']);
+        TruckSchedule::factory()->for($truck)->for($village)->create(['day_of_week' => today()->dayOfWeekIso, 'start_time' => '08:00', 'end_time' => '09:30']);
         RouteStop::factory()->for($truck)->create(['position' => 1, 'label' => 'Place du marché']);
-        Report::factory()->assigned($truck)->create(['cleanup_at' => today()->setTime(14, 0), 'description' => 'Dépôt à nettoyer']);
-        Report::factory()->assigned($truck)->create(['cleanup_at' => today()->addDays(3), 'description' => 'Dépôt plus tard']);
 
         $this->actingAs(User::factory()->agent($truck)->create())
             ->get(route('agent.route'))
             ->assertOk()
-            ->assertSee('Place du marché')
-            ->assertSee('Dépôt à nettoyer')
-            ->assertDontSee('Dépôt plus tard');
+            ->assertSee('Hadouja')
+            ->assertSee('08:00 – 09:30')
+            ->assertSee('Place du marché');
     }
 
     public function test_agent_ticks_then_unticks_a_stop_for_today(): void

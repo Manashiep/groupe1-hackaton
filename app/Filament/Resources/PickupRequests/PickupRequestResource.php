@@ -5,11 +5,8 @@ namespace App\Filament\Resources\PickupRequests;
 use App\Enums\PickupStatus;
 use App\Filament\Resources\PickupRequests\Pages\ManagePickupRequests;
 use App\Models\PickupRequest;
-use App\Models\Truck;
 use BackedEnum;
 use Filament\Actions\Action;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
@@ -18,7 +15,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 /**
- * Demandes de collecte : rendez-vous avec un camion ou refus motivé.
+ * Demandes de collecte : prises en charge par des volontaires, la mairie peut en refuser.
  */
 class PickupRequestResource extends Resource
 {
@@ -36,29 +33,22 @@ class PickupRequestResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
-    public static function getNavigationBadge(): ?string
-    {
-        $count = PickupRequest::where('status', PickupStatus::EnAttente)->count();
-
-        return $count ? (string) $count : null;
-    }
-
-    public static function getNavigationBadgeColor(): ?string
-    {
-        return 'warning';
-    }
-
     public static function table(Table $table): Table
     {
         return $table
             ->defaultSort('created_at', 'desc')
+            ->modifyQueryUsing(fn ($query) => $query->with(['user', 'village', 'taker', 'association']))
             ->columns([
                 TextColumn::make('description')->limit(50)->wrap()->searchable(),
                 TextColumn::make('user.name')->label('Demandeur')->description(fn (PickupRequest $record): ?string => $record->user?->phone),
                 TextColumn::make('village.name')->label('Village')->placeholder('—'),
-                TextColumn::make('preferred_date')->label('Date souhaitée')->date('d/m')->placeholder('—'),
                 TextColumn::make('status')->label('Statut')->badge(),
-                TextColumn::make('appointment_at')->label('Rendez-vous')->dateTime('d/m H:i')->description(fn (PickupRequest $record): ?string => $record->truck?->name)->placeholder('—'),
+                TextColumn::make('appointment_at')
+                    ->label('Pris en charge')
+                    ->dateTime('d/m H:i')
+                    ->description(fn (PickupRequest $record): ?string => $record->takerName())
+                    ->placeholder('—'),
+                TextColumn::make('created_at')->label('Reçue')->since(),
             ])
             ->filters([
                 SelectFilter::make('status')->label('Statut')->options(PickupStatus::class),
@@ -69,24 +59,9 @@ class PickupRequestResource extends Resource
                     ->icon(Heroicon::OutlinedMap)
                     ->color('gray')
                     ->url(fn (PickupRequest $record): string => "https://www.openstreetmap.org/?mlat={$record->latitude}&mlon={$record->longitude}#map=18/{$record->latitude}/{$record->longitude}", shouldOpenInNewTab: true),
-                Action::make('accept')
-                    ->label('Accepter')
-                    ->icon(Heroicon::OutlinedCalendarDays)
-                    ->visible(fn (PickupRequest $record): bool => $record->status === PickupStatus::EnAttente)
-                    ->fillForm(fn (PickupRequest $record): array => [
-                        'truck_id' => Truck::where('village_id', $record->village_id)->value('id'),
-                        'appointment_at' => ($record->preferred_date ?? today()->addDay())->copy()->setTime(10, 0),
-                    ])
-                    ->schema([
-                        Select::make('truck_id')->label('Camion')->options(Truck::pluck('name', 'id'))->required(),
-                        DateTimePicker::make('appointment_at')->label('Jour et heure du passage')->seconds(false)->required(),
-                        Textarea::make('admin_note')->label('Message pour l\'habitant (facultatif)')->maxLength(500),
-                    ])
-                    ->action(fn (PickupRequest $record, array $data) => $record->update([...$data, 'status' => PickupStatus::Acceptee]))
-                    ->successNotificationTitle('Rendez-vous fixé'),
                 Action::make('refuse')
                     ->label('Refuser')
-                    ->icon(Heroicon::OutlinedXMark)
+                    ->icon(Heroicon::OutlinedNoSymbol)
                     ->color('gray')
                     ->visible(fn (PickupRequest $record): bool => $record->status === PickupStatus::EnAttente)
                     ->schema([

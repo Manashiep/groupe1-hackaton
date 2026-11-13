@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ComplaintReason;
+use App\Models\TruckSchedule;
 use App\Models\Village;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Calendrier de passage du camion du village choisi par l'habitant.
+ * Calendrier de ramassage du village choisi : camions, jours, heures et alertes du jour.
  */
 class TruckCalendarController extends Controller
 {
@@ -25,10 +26,23 @@ class TruckCalendarController extends Controller
             $user->update(['village_id' => $village->id]);
         }
 
+        $trucks = $village
+            ? $village->trucks()
+                ->with([
+                    'schedules' => fn ($q) => $q->where('village_id', $village->id),
+                    'notices' => fn ($q) => $q->recent(),
+                ])
+                ->orderBy('name')
+                ->get()
+            : collect();
+
         return view('trucks.index', [
             'villages' => $villages,
             'village' => $village,
-            'trucks' => $village?->trucks()->with('schedules')->get() ?? collect(),
+            'trucks' => $trucks,
+            'next' => $trucks->flatMap->schedules
+                ->sortBy(fn (TruckSchedule $s): string => $s->nextOccurrence()->toDateString().$s->start_time)
+                ->first(),
             'reasons' => ComplaintReason::cases(),
         ]);
     }

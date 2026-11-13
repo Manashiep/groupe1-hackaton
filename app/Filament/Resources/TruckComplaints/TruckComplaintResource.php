@@ -32,7 +32,7 @@ class TruckComplaintResource extends Resource
 
     protected static ?string $pluralModelLabel = 'problèmes de camion';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 4;
 
     public static function getNavigationBadge(): ?string
     {
@@ -51,7 +51,7 @@ class TruckComplaintResource extends Resource
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
-                TextColumn::make('truck.name')->label('Camion')->description(fn (TruckComplaint $record): ?string => $record->truck?->village?->name),
+                TextColumn::make('truck.name')->label('Camion')->description(fn (TruckComplaint $record): ?string => $record->truck?->villages->pluck('name')->join(', ')),
                 TextColumn::make('reason')->label('Problème')->badge(),
                 TextColumn::make('message')->wrap()->placeholder('—'),
                 TextColumn::make('user.name')->label('Habitant')->description(fn (TruckComplaint $record): ?string => $record->user?->phone),

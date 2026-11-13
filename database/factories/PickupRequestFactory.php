@@ -26,4 +26,13 @@ class PickupRequestFactory extends Factory
             'status' => PickupStatus::EnAttente,
         ];
     }
+
+    public function takenBy(?User $taker = null): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'status' => PickupStatus::PriseEnCharge,
+            'taken_by_id' => $taker?->id ?? User::factory(),
+            'appointment_at' => today()->addDay()->setTime(10, 0),
+        ]);
+    }
 }

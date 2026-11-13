@@ -4,6 +4,6 @@
     @endpush
     @push('scripts')
         <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-        <script src="{{ asset('js/maps.js') }}?v=5"></script>
+        <script src="{{ asset('js/maps.js') }}?v=6"></script>
     @endpush
 @endonce

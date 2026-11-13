@@ -33,7 +33,7 @@ class UserResource extends Resource
 
     protected static ?string $pluralModelLabel = 'utilisateurs';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 7;
 
     public static function form(Schema $schema): Schema
     {
@@ -74,6 +74,7 @@ class UserResource extends Resource
             ])
             ->recordActions([
                 EditAction::make(),
+                
             ]);
     }
 

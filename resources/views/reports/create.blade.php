@@ -5,34 +5,40 @@
 @include('partials.leaflet')
 
 @section('content')
-<div class="page">
-    <a href="{{ route('map') }}" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Carte</a>
-    <h1 class="mt-2 mb-3">Signaler un dépôt sauvage</h1>
+<div class="hero">
+    <div class="inner">
+        <a href="{{ route('map') }}" class="btn btn-ghost btn-sm mb-3"><i class="bi bi-arrow-left"></i> Carte</a>
+        <h1>Signaler un dépôt sauvage</h1>
+        <p>Il apparaîtra sur la carte : un voisin ou une association pourra s'en occuper.</p>
+    </div>
+</div>
+<div class="sheet">
+    <div class="inner">
+        @include('partials.flash')
 
-    @include('partials.flash')
+        <form method="POST" action="{{ route('reports.store') }}" enctype="multipart/form-data" id="report-form" novalidate>
+            @csrf
+            <label for="photo" class="d-block mb-3" style="cursor:pointer">
+                <span class="panel d-flex align-items-center gap-3" id="photo-placeholder">
+                    <span class="icon-chip ico-red" style="width:56px;height:56px;font-size:1.5rem"><i class="bi bi-camera-fill"></i></span>
+                    <span><strong class="d-block">Prendre une photo</strong><span class="text-muted">ou en choisir une dans la galerie</span></span>
+                </span>
+                <img id="photo-preview" alt="Aperçu de la photo" class="d-none w-100" style="max-height:280px;object-fit:cover;border-radius:var(--radius)">
+            </label>
+            <input type="file" name="photo" id="photo" accept="image/*" class="visually-hidden">
 
-    <form method="POST" action="{{ route('reports.store') }}" enctype="multipart/form-data" id="report-form" novalidate>
-        @csrf
-        <label for="photo" class="photo-drop mb-3">
-            <span id="photo-placeholder">
-                <i class="bi bi-camera fs-1 text-primary d-block"></i>
-                <strong>Prendre une photo</strong>
-                <span class="d-block small text-muted">ou en choisir une dans la galerie</span>
-            </span>
-            <img id="photo-preview" alt="Aperçu" class="d-none">
-        </label>
-        <input type="file" name="photo" id="photo" accept="image/*" class="visually-hidden">
+            <div class="form-label">L'endroit</div>
+            <div id="map" class="map mb-2"></div>
+            <p class="text-muted small mb-3" id="loc-status"></p>
+            <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude') }}">
+            <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude') }}">
 
-        <div id="map" class="map mb-2"></div>
-        <p class="small text-muted mb-3" id="loc-status"></p>
-        <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude') }}">
-        <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude') }}">
+            <label for="description" class="form-label">Quelques mots <span class="text-muted fw-normal">(facultatif)</span></label>
+            <textarea id="description" name="description" rows="2" maxlength="500" class="form-control mb-4" placeholder="Ex. : gros tas d'ordures derrière l'école">{{ old('description') }}</textarea>
 
-        <label for="description" class="form-label">Quelques mots <span class="text-muted fw-normal">(facultatif)</span></label>
-        <textarea id="description" name="description" rows="2" maxlength="500" class="form-control mb-4" placeholder="Ex. : gros tas d'ordures derrière l'école">{{ old('description') }}</textarea>
-
-        <button class="btn btn-primary btn-lg w-100" id="submit-btn"><i class="bi bi-send-fill me-2"></i>Envoyer</button>
-    </form>
+            <button class="btn btn-primary btn-lg w-100" id="submit-btn"><i class="bi bi-send-fill me-2"></i>Envoyer</button>
+        </form>
+    </div>
 </div>
 @endsection
 
@@ -41,11 +47,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     CC.locationPicker({ map: 'map', lat: 'latitude', lng: 'longitude', status: 'loc-status' });
 
-    const input = document.getElementById('photo');
-    input.addEventListener('change', () => {
-        if (!input.files[0]) return;
+    CC.compressPhotoInput(document.getElementById('photo'), (url) => {
         const preview = document.getElementById('photo-preview');
-        preview.src = URL.createObjectURL(input.files[0]);
+        preview.src = url;
         preview.classList.remove('d-none');
         document.getElementById('photo-placeholder').classList.add('d-none');
     });

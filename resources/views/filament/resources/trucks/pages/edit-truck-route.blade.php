@@ -17,7 +17,7 @@
             init() {
                 this.map = L.map(this.$refs.map).setView(config.center, 16);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(this.map);
-                L.circleMarker(config.center, { radius: 6, color: '#6b7280', fillOpacity: .4 }).addTo(this.map).bindTooltip(config.village);
+                config.villages.forEach((v) => L.circleMarker([v.lat, v.lng], { radius: 7, color: '#0b2a5b', weight: 2, fillColor: '#f5c518', fillOpacity: .9 }).addTo(this.map).bindTooltip(v.name, { permanent: true, direction: 'top', offset: [0, -6] }));
                 this.layer = L.layerGroup().addTo(this.map);
                 this.map.on('click', (e) => this.$wire.addStop(e.latlng.lat, e.latlng.lng));
                 this.draw(config.stops, true);
@@ -49,7 +49,7 @@
             </x-slot>
             <div
                 wire:ignore
-                x-data="routeEditor(@js(['stops' => $this->stopsPayload(), 'color' => $truck->color, 'village' => $truck->village?->name ?? '', 'center' => [$truck->village?->latitude ?? -11.7038, $truck->village?->longitude ?? 43.2520]]))"
+                x-data="routeEditor(@js(['stops' => $this->stopsPayload(), 'color' => $truck->color, 'villages' => $truck->villages->map(fn ($v) => ['name' => $v->name, 'lat' => $v->latitude, 'lng' => $v->longitude])->values(), 'center' => [$truck->villages->first()?->latitude ?? -11.7038, $truck->villages->first()?->longitude ?? 43.2520]]))"
                 x-on:route-updated.window="draw($event.detail.stops)"
             >
                 <div x-ref="map" class="route-map"></div>
@@ -58,7 +58,7 @@
 
         <x-filament::section>
             <x-slot name="heading">Ordre de passage</x-slot>
-            <x-slot name="description">{{ $stops->count() }} point(s) · {{ $truck->village?->name }}</x-slot>
+            <x-slot name="description">{{ $stops->count() }} point(s) · {{ $truck->villages->pluck('name')->join(', ') }}</x-slot>
 
             @forelse ($stops as $stop)
                 <div class="route-row" wire:key="stop-{{ $stop->id }}">

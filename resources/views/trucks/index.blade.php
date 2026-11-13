@@ -3,83 +3,83 @@
 @section('title', 'Camion')
 
 @section('content')
-<div class="page">
-    <h1 class="mb-3">Passage du camion</h1>
-
-    @include('partials.flash')
-
-    <div class="village-chips mb-4" role="list" aria-label="Villages">
-        @foreach ($villages as $v)
-            <a role="listitem" href="{{ route('trucks.index', ['village' => $v->slug]) }}" class="{{ $village?->id === $v->id ? 'active' : '' }}">{{ $v->name }}</a>
-        @endforeach
+<div class="hero">
+    <div class="inner">
+        <h1>Passage du camion</h1>
+        <p class="mb-3">Choisissez votre village pour voir quand passe le camion de la mairie.</p>
+        <nav class="chips" aria-label="Villages">
+            @foreach ($villages as $v)
+                <a href="{{ route('trucks.index', ['village' => $v->slug]) }}" class="chip {{ $village?->id === $v->id ? 'active' : '' }}" @if($village?->id === $v->id) aria-current="true" @endif>{{ $v->name }}</a>
+            @endforeach
+        </nav>
     </div>
+</div>
 
-    @if (! $village)
-        <div class="empty"><i class="bi bi-hand-index"></i>Choisissez votre village.</div>
-    @else
-        @forelse ($trucks as $truck)
-            @php($next = $truck->upcomingPassages(14)->first())
-            <div class="card mb-3">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <span class="brand-mark" style="width:44px;height:44px;background: {{ $truck->color }}"><i class="bi bi-truck fs-5"></i></span>
-                        <div>
-                            <div class="fw-bold">{{ $truck->name }}</div>
-                            <div class="small text-muted">{{ $village->name }} @if ($truck->plate) · {{ $truck->plate }} @endif</div>
+<div class="sheet">
+    <div class="inner">
+        @include('partials.flash')
+
+        @if (! $village)
+            <div class="empty"><span class="icon-chip"><i class="bi bi-hand-index-thumb"></i></span><strong>Choisissez votre village</strong>Nous le retiendrons pour la prochaine fois.</div>
+        @elseif ($trucks->isEmpty())
+            <div class="empty"><span class="icon-chip"><i class="bi bi-truck"></i></span><strong>Aucun camion n'est encore affecté à {{ $village->name }}</strong>La mairie organise les tournées village par village.</div>
+        @else
+            @if ($next)
+                @php($date = $next->nextOccurrence())
+                <div class="next-passage mb-3">
+                    <div class="fw-semibold">Prochain passage à {{ $village->name }}</div>
+                    <div class="fs-3 fw-bold lh-sm mt-1">{{ $date->isToday() ? 'Aujourd\'hui' : ($date->isTomorrow() ? 'Demain' : ucfirst($date->translatedFormat('l j F'))) }}</div>
+                    <div class="fs-5 fw-semibold">{{ $next->timeRange() }} · {{ $next->truck->name }}</div>
+                </div>
+            @endif
+
+            @foreach ($trucks as $truck)
+                @foreach ($truck->notices as $notice)
+                    <div class="callout mb-3">
+                        <i class="bi {{ $notice->kind->icon() }}"></i>
+                        <div><strong>{{ $truck->name }} · {{ $notice->kind->label() }}</strong>
+                            @if ($notice->message)<div>{{ $notice->message }}</div>@endif
+                            <div class="small mt-1" style="opacity:.75">{{ $notice->created_at->diffForHumans() }}</div>
                         </div>
                     </div>
+                @endforeach
 
-                    @if ($next)
-                        <div class="rounded-4 p-3 mb-3" style="background: var(--cc-green-soft)">
-                            <div class="small text-muted">Prochain passage</div>
-                            <div class="fs-5 fw-bold">
-                                {{ $next['date']->isToday() ? 'Aujourd\'hui' : ($next['date']->isTomorrow() ? 'Demain' : ucfirst($next['date']->translatedFormat('l j F'))) }}
-                                · {{ $next['schedule']->timeRange() }}
-                            </div>
+                <div class="panel mb-3">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <span class="icon-chip" style="background: {{ $truck->color }}; color: #fff"><i class="bi bi-truck"></i></span>
+                        <div class="flex-grow-1"><div class="fw-bold">{{ $truck->name }}</div><div class="row-sub">{{ $truck->plate }}</div></div>
+                    </div>
+                    @foreach ($truck->schedules as $schedule)
+                        <div class="row-item py-2">
+                            <span class="flex-grow-1 {{ $schedule->day_of_week === now()->dayOfWeekIso ? 'fw-bold text-primary' : '' }}">{{ $schedule->dayLabel() }}</span>
+                            <span class="fw-semibold" style="font-variant-numeric: tabular-nums">{{ $schedule->timeRange() }}</span>
                         </div>
-                    @endif
-
-                    @forelse ($truck->schedules as $schedule)
-                        <div class="day-row {{ $schedule->day_of_week === now()->dayOfWeekIso ? 'today' : '' }}">
-                            <span>{{ $schedule->dayLabel() }}</span>
-                            <span>{{ $schedule->timeRange() }}</span>
-                        </div>
-                    @empty
-                        <p class="text-muted mb-0">Aucun jour de passage n'est encore programmé.</p>
-                    @endforelse
-
-                    <button type="button" class="btn btn-light w-100 mt-3" data-bs-toggle="modal" data-bs-target="#complaint-{{ $truck->id }}">
-                        <i class="bi bi-exclamation-triangle me-1"></i> Signaler un problème avec ce camion
+                    @endforeach
+                    <button type="button" class="btn btn-ghost w-100 mt-2" data-bs-toggle="collapse" data-bs-target="#complaint-{{ $truck->id }}" aria-expanded="false">
+                        <i class="bi bi-flag me-1"></i> Signaler un problème avec ce camion
                     </button>
-                </div>
-            </div>
-
-            <div class="modal fade" id="complaint-{{ $truck->id }}" tabindex="-1" aria-labelledby="complaint-title-{{ $truck->id }}" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <form method="POST" action="{{ route('trucks.complaints.store', $truck) }}" class="modal-content border-0 rounded-4">
+                    <form method="POST" action="{{ route('trucks.complaints.store', $truck) }}" class="collapse mt-3" id="complaint-{{ $truck->id }}">
                         @csrf
-                        <div class="modal-header border-0">
-                            <h2 class="modal-title h5" id="complaint-title-{{ $truck->id }}">Un problème avec le {{ $truck->name }} ?</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
-                        </div>
-                        <div class="modal-body pt-0">
+                        <div class="d-grid gap-2 mb-2">
                             @foreach ($reasons as $reason)
-                                <div class="form-check border rounded-3 p-3 ps-5 mb-2">
-                                    <input class="form-check-input" type="radio" name="reason" value="{{ $reason->value }}" id="r-{{ $truck->id }}-{{ $reason->value }}" @checked($loop->first)>
-                                    <label class="form-check-label w-100" for="r-{{ $truck->id }}-{{ $reason->value }}">{{ $reason->getLabel() }}</label>
+                                <div class="kind-option">
+                                    <input type="radio" name="reason" value="{{ $reason->value }}" id="r-{{ $truck->id }}-{{ $reason->value }}" @checked($loop->first)>
+                                    <label for="r-{{ $truck->id }}-{{ $reason->value }}">{{ $reason->getLabel() }}</label>
                                 </div>
                             @endforeach
-                            <textarea name="message" rows="2" maxlength="500" class="form-control mt-3" placeholder="Précisez si besoin (jour, heure…)"></textarea>
                         </div>
-                        <div class="modal-footer border-0">
-                            <button class="btn btn-primary w-100">Envoyer à la mairie</button>
-                        </div>
+                        <textarea name="message" rows="2" maxlength="500" class="form-control mb-2" placeholder="Précisez si besoin (jour, heure, rue…)"></textarea>
+                        <button class="btn btn-primary w-100">Envoyer à la mairie</button>
                     </form>
                 </div>
-            </div>
-        @empty
-            <div class="empty"><i class="bi bi-truck"></i>Aucun camion n'est encore affecté à {{ $village->name }}.</div>
-        @endforelse
-    @endif
+            @endforeach
+        @endif
+    </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.querySelector('.chip.active')?.scrollIntoView({ inline: 'center', block: 'nearest' });
+</script>
+@endpush

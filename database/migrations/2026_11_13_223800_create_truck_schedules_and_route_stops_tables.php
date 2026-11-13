@@ -7,14 +7,15 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Calendrier de passage du camion, points de collecte de sa tournée
-     * et points validés par l'agent chaque jour.
+     * Calendrier de ramassage (par camion et par village), points de la tournée,
+     * points validés par l'agent et alertes envoyées aux habitants.
      */
     public function up(): void
     {
         Schema::create('truck_schedules', function (Blueprint $table) {
             $table->id();
             $table->foreignId('truck_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('village_id')->constrained()->cascadeOnDelete();
             $table->unsignedTinyInteger('day_of_week'); // ISO : 1 = lundi … 7 = dimanche
             $table->time('start_time');
             $table->time('end_time')->nullable();
@@ -40,10 +41,20 @@ return new class extends Migration
 
             $table->unique(['route_stop_id', 'visit_date']);
         });
+
+        Schema::create('truck_notices', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('truck_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('kind', 20);
+            $table->string('message', 300)->nullable();
+            $table->timestamps();
+        });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('truck_notices');
         Schema::dropIfExists('route_stop_visits');
         Schema::dropIfExists('route_stops');
         Schema::dropIfExists('truck_schedules');

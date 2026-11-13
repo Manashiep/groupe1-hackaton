@@ -16,16 +16,14 @@ class TrucksTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->with(['schedules', 'agents'])->withCount('stops'))
+            ->modifyQueryUsing(fn ($query) => $query->with(['villages', 'agents'])->withCount(['stops', 'schedules']))
             ->defaultSort('name')
             ->columns([
                 ColorColumn::make('color')->label(''),
                 TextColumn::make('name')->label('Camion')->description(fn (Truck $record): ?string => $record->plate)->searchable(),
-                TextColumn::make('village.name')->label('Village')->placeholder('—'),
-                TextColumn::make('days')
-                    ->label('Passages')
-                    ->state(fn (Truck $record): string => $record->schedules->map(fn ($s) => mb_substr($s->dayLabel(), 0, 3))->implode(', ') ?: '—'),
-                TextColumn::make('agents.name')->label('Agents')->badge()->placeholder('—'),
+                TextColumn::make('villages.name')->label('Villages')->badge()->placeholder('—'),
+                TextColumn::make('schedules_count')->label('Créneaux / semaine'),
+                TextColumn::make('agents.name')->label('Agents')->placeholder('—'),
                 TextColumn::make('stops_count')->label('Points de collecte'),
             ])
             ->recordActions([

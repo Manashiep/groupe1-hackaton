@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Truck;
 use App\Models\TruckSchedule;
+use App\Models\Village;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,6 +19,7 @@ class TruckScheduleFactory extends Factory
     {
         return [
             'truck_id' => Truck::factory(),
+            'village_id' => Village::factory(),
             'day_of_week' => fake()->numberBetween(1, 6),
             'start_time' => '07:00',
             'end_time' => '09:00',
