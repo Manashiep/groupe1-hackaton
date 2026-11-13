@@ -4,19 +4,21 @@ namespace App\Models;
 
 use App\Enums\Role;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'phone', 'password', 'role', 'quartier_id', 'team_id', 'points', 'is_active',
+        'name', 'email', 'phone', 'password', 'role', 'truck_id', 'village_id', 'is_active',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -28,18 +30,19 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => Role::class,
             'is_active' => 'boolean',
-            'points' => 'integer',
         ];
     }
 
-    public function quartier(): BelongsTo
+    /** Camion de l'agent de collecte. */
+    public function truck(): BelongsTo
     {
-        return $this->belongsTo(Quartier::class);
+        return $this->belongsTo(Truck::class);
     }
 
-    public function team(): BelongsTo
+    /** Dernier village consulté dans le calendrier (pré-sélection). */
+    public function village(): BelongsTo
     {
-        return $this->belongsTo(Team::class);
+        return $this->belongsTo(Village::class);
     }
 
     public function reports(): HasMany
@@ -57,30 +60,28 @@ class User extends Authenticatable
         return in_array($this->role, $roles, true);
     }
 
-    public function isAdmin(): bool
-    {
-        return $this->role === Role::Admin;
-    }
-
-    /** Responsable municipal ou administrateur : accès à l'espace de gestion. */
-    public function isStaff(): bool
-    {
-        return $this->hasRole(Role::Responsable, Role::Admin);
-    }
-
     public function isAgent(): bool
     {
         return $this->role === Role::Agent;
     }
 
-    public function isCitizen(): bool
+    public function isStaff(): bool
     {
-        return $this->role === Role::Citoyen;
+        return $this->role->isStaff();
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->is_active && $this->isStaff();
     }
 
     public function homeUrl(): string
     {
-        return route($this->role->homeRoute());
+        return match (true) {
+            $this->isStaff() => url('/admin'),
+            $this->isAgent() => route('agent.route'),
+            default => route('map'),
+        };
     }
 
     public function initials(): string
@@ -88,7 +89,7 @@ class User extends Authenticatable
         return collect(explode(' ', $this->name))
             ->filter()
             ->take(2)
-            ->map(fn ($part) => mb_strtoupper(mb_substr($part, 0, 1)))
+            ->map(fn (string $part): string => mb_strtoupper(mb_substr($part, 0, 1)))
             ->implode('');
     }
 }

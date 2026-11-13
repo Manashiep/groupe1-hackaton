@@ -2,14 +2,17 @@
 
 namespace App\Enums;
 
-enum Role: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum Role: string implements HasColor, HasLabel
 {
     case Citoyen = 'citoyen';
     case Agent = 'agent';
     case Responsable = 'responsable';
     case Admin = 'admin';
 
-    public function label(): string
+    public function getLabel(): string
     {
         return match ($this) {
             self::Citoyen => 'Citoyen',
@@ -19,22 +22,19 @@ enum Role: string
         };
     }
 
-    public function color(): string
+    public function getColor(): string
     {
         return match ($this) {
-            self::Citoyen => 'secondary',
+            self::Citoyen => 'gray',
             self::Agent => 'info',
             self::Responsable => 'primary',
-            self::Admin => 'dark',
+            self::Admin => 'warning',
         };
     }
 
-    public function homeRoute(): string
+    /** Responsables et administrateurs ont accès au panneau Filament. */
+    public function isStaff(): bool
     {
-        return match ($this) {
-            self::Citoyen => 'citizen.dashboard',
-            self::Agent => 'agent.dashboard',
-            self::Responsable, self::Admin => 'admin.dashboard',
-        };
+        return $this === self::Responsable || $this === self::Admin;
     }
 }

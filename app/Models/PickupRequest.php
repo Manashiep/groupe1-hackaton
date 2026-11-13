@@ -3,43 +3,33 @@
 namespace App\Models;
 
 use App\Enums\PickupStatus;
-use App\Enums\WasteType;
+use Database\Factories\PickupRequestFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
- * Demande de collecte exceptionnelle (grande quantité, encombrants, restaurants, commerces).
+ * Demande de collecte (grande quantité de déchets, encombrants…).
  */
 class PickupRequest extends Model
 {
-    public const REQUESTER_TYPES = [
-        'particulier' => 'Particulier',
-        'restaurant' => 'Restaurant / hôtel',
-        'commerce' => 'Commerce',
-        'association' => 'Association / école',
-    ];
-
-    public const VOLUMES = [
-        'petit' => 'Moins de 5 sacs',
-        'moyen' => 'Une charrette (≈ 1 m³)',
-        'grand' => 'Plus d\'une camionnette',
-    ];
+    /** @use HasFactory<PickupRequestFactory> */
+    use HasFactory;
 
     protected $fillable = [
-        'user_id', 'quartier_id', 'requester_type', 'waste_type', 'volume', 'description', 'address',
-        'latitude', 'longitude', 'preferred_date', 'status', 'appointment_at', 'admin_note',
+        'user_id', 'village_id', 'description', 'latitude', 'longitude', 'preferred_date',
+        'status', 'truck_id', 'appointment_at', 'done_at', 'admin_note',
     ];
 
     protected function casts(): array
     {
         return [
             'status' => PickupStatus::class,
-            'waste_type' => WasteType::class,
-            'preferred_date' => 'date',
-            'appointment_at' => 'datetime',
             'latitude' => 'float',
             'longitude' => 'float',
+            'preferred_date' => 'date',
+            'appointment_at' => 'datetime',
+            'done_at' => 'datetime',
         ];
     }
 
@@ -48,28 +38,13 @@ class PickupRequest extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function quartier(): BelongsTo
+    public function village(): BelongsTo
     {
-        return $this->belongsTo(Quartier::class);
+        return $this->belongsTo(Village::class);
     }
 
-    public function intervention(): HasOne
+    public function truck(): BelongsTo
     {
-        return $this->hasOne(Intervention::class)->latestOfMany();
-    }
-
-    public function requesterLabel(): string
-    {
-        return self::REQUESTER_TYPES[$this->requester_type] ?? $this->requester_type;
-    }
-
-    public function volumeLabel(): string
-    {
-        return self::VOLUMES[$this->volume] ?? $this->volume;
-    }
-
-    public function reference(): string
-    {
-        return 'DEM-'.str_pad((string) $this->id, 4, '0', STR_PAD_LEFT);
+        return $this->belongsTo(Truck::class);
     }
 }

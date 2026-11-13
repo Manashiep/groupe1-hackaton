@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
-use App\Models\Quartier;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,9 +15,7 @@ class RegisterController extends Controller
 {
     public function create(): View
     {
-        return view('auth.register', [
-            'quartiers' => Quartier::orderBy('ville')->orderBy('name')->get(),
-        ]);
+        return view('auth.register');
     }
 
     public function store(Request $request): RedirectResponse
@@ -27,7 +24,6 @@ class RegisterController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:190', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:30'],
-            'quartier_id' => ['required', 'exists:quartiers,id'],
             'password' => ['required', 'confirmed', Password::min(8)],
         ]);
 
@@ -37,7 +33,6 @@ class RegisterController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('citizen.dashboard')
-            ->with('success', 'Votre compte est créé. Bienvenue sur CleanComores !');
+        return redirect()->route('map');
     }
 }

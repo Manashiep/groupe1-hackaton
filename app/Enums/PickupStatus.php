@@ -2,14 +2,17 @@
 
 namespace App\Enums;
 
-enum PickupStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum PickupStatus: string implements HasColor, HasLabel
 {
     case EnAttente = 'en_attente';
     case Acceptee = 'acceptee';
     case Effectuee = 'effectuee';
     case Refusee = 'refusee';
 
-    public function label(): string
+    public function getLabel(): string
     {
         return match ($this) {
             self::EnAttente => 'En attente',
@@ -19,13 +22,23 @@ enum PickupStatus: string
         };
     }
 
-    public function color(): string
+    public function getColor(): string
     {
         return match ($this) {
             self::EnAttente => 'warning',
             self::Acceptee => 'info',
             self::Effectuee => 'success',
-            self::Refusee => 'secondary',
+            self::Refusee => 'gray',
+        };
+    }
+
+    public function hex(): string
+    {
+        return match ($this) {
+            self::EnAttente => '#d97706',
+            self::Acceptee => '#2563eb',
+            self::Effectuee => '#16a34a',
+            self::Refusee => '#6b7280',
         };
     }
 }

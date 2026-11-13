@@ -2,78 +2,58 @@
 
 namespace App\Enums;
 
-enum ReportStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum ReportStatus: string implements HasColor, HasLabel
 {
     case Nouveau = 'nouveau';
-    case Valide = 'valide';
-    case Planifie = 'planifie';
+    case PrisEnCharge = 'pris_en_charge';
     case EnCours = 'en_cours';
-    case Resolu = 'resolu';
+    case Nettoye = 'nettoye';
     case Rejete = 'rejete';
 
-    public function label(): string
+    public function getLabel(): string
     {
         return match ($this) {
             self::Nouveau => 'Nouveau',
-            self::Valide => 'Vérifié',
-            self::Planifie => 'Intervention planifiée',
+            self::PrisEnCharge => 'Pris en charge',
             self::EnCours => 'Nettoyage en cours',
-            self::Resolu => 'Zone nettoyée',
+            self::Nettoye => 'Nettoyé',
             self::Rejete => 'Rejeté',
         };
     }
 
-    public function color(): string
+    public function getColor(): string
     {
         return match ($this) {
             self::Nouveau => 'danger',
-            self::Valide => 'warning',
-            self::Planifie => 'info',
-            self::EnCours => 'primary',
-            self::Resolu => 'success',
-            self::Rejete => 'secondary',
+            self::PrisEnCharge => 'warning',
+            self::EnCours => 'info',
+            self::Nettoye => 'success',
+            self::Rejete => 'gray',
         };
     }
 
-    /** Hex colour used by Leaflet markers. */
+    /** Couleur des marqueurs sur la carte. */
     public function hex(): string
     {
         return match ($this) {
             self::Nouveau => '#dc2626',
-            self::Valide => '#d97706',
-            self::Planifie => '#0891b2',
+            self::PrisEnCharge => '#d97706',
             self::EnCours => '#2563eb',
-            self::Resolu => '#16a34a',
+            self::Nettoye => '#16a34a',
             self::Rejete => '#6b7280',
         };
     }
 
-    public function icon(): string
+    /**
+     * Statuts visibles sur la carte des habitants.
+     *
+     * @return list<self>
+     */
+    public static function visibleOnMap(): array
     {
-        return match ($this) {
-            self::Nouveau => 'bi-exclamation-circle',
-            self::Valide => 'bi-patch-check',
-            self::Planifie => 'bi-calendar-check',
-            self::EnCours => 'bi-truck',
-            self::Resolu => 'bi-check-circle',
-            self::Rejete => 'bi-x-circle',
-        };
-    }
-
-    public function isOpen(): bool
-    {
-        return in_array($this, self::open(), true);
-    }
-
-    /** @return list<self> */
-    public static function open(): array
-    {
-        return [self::Nouveau, self::Valide, self::Planifie, self::EnCours];
-    }
-
-    /** Statuts indiquant qu'un responsable a confirmé le problème. @return list<self> */
-    public static function verified(): array
-    {
-        return [self::Valide, self::Planifie, self::EnCours, self::Resolu];
+        return [self::Nouveau, self::PrisEnCharge, self::EnCours];
     }
 }

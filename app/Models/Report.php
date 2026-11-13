@@ -2,31 +2,35 @@
 
 namespace App\Models;
 
-use App\Enums\ReportCategory;
 use App\Enums\ReportStatus;
+use Database\Factories\ReportFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Signalement d'un dépôt sauvage.
+ */
 class Report extends Model
 {
+    /** @use HasFactory<ReportFactory> */
+    use HasFactory;
+
     protected $fillable = [
-        'user_id', 'quartier_id', 'category', 'description', 'photo_path', 'latitude', 'longitude',
-        'address', 'status', 'points_awarded', 'resolved_at',
+        'user_id', 'village_id', 'photo_path', 'description', 'latitude', 'longitude',
+        'status', 'truck_id', 'cleanup_at', 'cleaned_at', 'admin_note',
     ];
 
     protected function casts(): array
     {
         return [
-            'category' => ReportCategory::class,
             'status' => ReportStatus::class,
             'latitude' => 'float',
             'longitude' => 'float',
-            'points_awarded' => 'boolean',
-            'resolved_at' => 'datetime',
+            'cleanup_at' => 'datetime',
+            'cleaned_at' => 'datetime',
         ];
     }
 
@@ -35,29 +39,20 @@ class Report extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function quartier(): BelongsTo
+    public function village(): BelongsTo
     {
-        return $this->belongsTo(Quartier::class);
+        return $this->belongsTo(Village::class);
     }
 
-    public function events(): HasMany
+    public function truck(): BelongsTo
     {
-        return $this->hasMany(ReportEvent::class)->oldest()->oldest('id');
+        return $this->belongsTo(Truck::class);
     }
 
-    public function interventions(): HasMany
+    /** @param Builder<Report> $query */
+    public function scopeVisibleOnMap(Builder $query): void
     {
-        return $this->hasMany(Intervention::class);
-    }
-
-    public function latestIntervention(): HasOne
-    {
-        return $this->hasOne(Intervention::class)->latestOfMany();
-    }
-
-    public function scopeOpen(Builder $query): Builder
-    {
-        return $query->whereIn('status', ReportStatus::open());
+        $query->whereIn('status', ReportStatus::visibleOnMap());
     }
 
     public function photoUrl(): ?string
@@ -65,24 +60,11 @@ class Report extends Model
         return $this->photo_path ? Storage::disk('public')->url($this->photo_path) : null;
     }
 
-    public function reference(): string
+    /** « Nettoyage prévu jeudi 14 novembre à 9h00 » quand une équipe a pris le signalement en charge. */
+    public function cleanupLabel(): ?string
     {
-        return 'SIG-'.str_pad((string) $this->id, 5, '0', STR_PAD_LEFT);
-    }
-
-    /** Enregistre une étape dans l'historique et met à jour le statut. */
-    public function transition(ReportStatus $status, ?User $by = null, ?string $note = null): void
-    {
-        $this->status = $status;
-        if ($status === ReportStatus::Resolu) {
-            $this->resolved_at = now();
-        }
-        $this->save();
-
-        $this->events()->create([
-            'user_id' => $by?->id,
-            'status' => $status,
-            'note' => $note,
-        ]);
+        return $this->cleanup_at
+            ? 'Nettoyage prévu '.$this->cleanup_at->translatedFormat('l j F à H\hi')
+            : null;
     }
 }

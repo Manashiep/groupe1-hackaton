@@ -25,14 +25,13 @@ class LoginController extends Controller
 
         if (! Auth::attempt([...$credentials, 'is_active' => true], $request->boolean('remember'))) {
             throw ValidationException::withMessages([
-                'email' => 'Ces identifiants ne correspondent à aucun compte actif.',
+                'email' => 'E-mail ou mot de passe incorrect.',
             ]);
         }
 
         $request->session()->regenerate();
 
-        return redirect()->intended($request->user()->homeUrl())
-            ->with('success', 'Bienvenue, '.$request->user()->name.' !');
+        return redirect()->intended($request->user()->homeUrl());
     }
 
     public function destroy(Request $request): RedirectResponse
