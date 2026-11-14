@@ -27,7 +27,10 @@
             </label>
             <input type="file" name="photo" id="photo" accept="image/*" class="visually-hidden">
 
-            <div class="form-label">L'endroit</div>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="form-label mb-0">L'endroit</span>
+                <button type="button" class="btn btn-soft btn-sm" id="locate-btn"><i class="bi bi-crosshair me-1"></i>Ma position actuelle</button>
+            </div>
             <div id="map" class="map mb-2"></div>
             <p class="text-muted small mb-3" id="loc-status"></p>
             <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude') }}">
@@ -45,7 +48,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    CC.locationPicker({ map: 'map', lat: 'latitude', lng: 'longitude', status: 'loc-status' });
+    CC.locationPicker({ map: 'map', lat: 'latitude', lng: 'longitude', status: 'loc-status', locateButton: 'locate-btn' });
 
     CC.compressPhotoInput(document.getElementById('photo'), (url) => {
         const preview = document.getElementById('photo-preview');

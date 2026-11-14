@@ -81,14 +81,26 @@ window.CC = window.CC || {};
             status.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Endroit enregistré. Glissez le repère pour l\'ajuster.';
         }
 
+        function useCurrentPosition() {
+            if (!window.isSecureContext) {
+                status.textContent = 'Le GPS demande une connexion sécurisée (https). Touchez la carte à l\'endroit exact.';
+                return;
+            }
+            status.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Recherche de votre position…';
+            CC.locate((ll) => { set(ll); map.setView(ll, 17, { animate: false }); },
+                () => { status.textContent = 'Position introuvable (GPS désactivé ou refusé). Touchez la carte à l\'endroit exact.'; });
+        }
+
         if (lat.value && lng.value) {
             const initial = L.latLng(+lat.value, +lng.value);
             set(initial);
             map.setView(initial, 17, { animate: false });
         } else {
-            status.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Recherche de votre position…';
-            CC.locate((ll) => { set(ll); map.setView(ll, 17, { animate: false }); },
-                () => { status.textContent = 'Touchez la carte à l\'endroit exact.'; });
+            useCurrentPosition();
+        }
+
+        if (opts.locateButton) {
+            document.getElementById(opts.locateButton).addEventListener('click', useCurrentPosition);
         }
 
         map.on('click', (e) => set(e.latlng));
