@@ -28,6 +28,16 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    /*
+    | SimuPay : fausse passerelle de paiement mobile (simulation, aucun vrai argent).
+    | Elle tourne comme un service séparé (php artisan serve --port=8001).
+    */
+    'simupay' => [
+        'url' => env('SIMUPAY_URL', 'http://127.0.0.1:8001/simupay'),
+        'secret_key' => env('SIMUPAY_SECRET_KEY'),       // CleanComores → SimuPay : « c'est bien moi »
+        'webhook_secret' => env('SIMUPAY_WEBHOOK_SECRET'), // SimuPay → CleanComores : signature des confirmations
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

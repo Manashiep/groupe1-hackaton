@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias(['role' => EnsureUserHasRole::class]);
+        // L'API de SimuPay est appelée par un serveur (pas un formulaire) : elle se protège par clé API, pas par jeton CSRF.
+        // Idem pour le webhook : il est protégé par sa signature HMAC.
+        $middleware->validateCsrfTokens(except: ['simupay/api/*', 'paiements/webhook']);
         $middleware->redirectGuestsTo(fn () => route('login'));
         $middleware->redirectUsersTo(fn (Request $request) => $request->user()->homeUrl());
     })

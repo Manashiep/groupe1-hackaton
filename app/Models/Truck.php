@@ -46,6 +46,11 @@ class Truck extends Model
         return $this->hasMany(TruckComplaint::class);
     }
 
+    public function passages(): HasMany
+    {
+        return $this->hasMany(TruckPassage::class);
+    }
+
     public function notices(): HasMany
     {
         return $this->hasMany(TruckNotice::class)->latest();

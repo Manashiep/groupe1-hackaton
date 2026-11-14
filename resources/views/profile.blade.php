@@ -41,6 +41,45 @@
             @endif
         @endforeach
 
+        @if ($user->isCitizen())
+            <div class="section-title"><h2>Ma redevance de collecte</h2></div>
+            <form method="POST" action="{{ route('profile.home-village') }}" class="panel mb-2">
+                @csrf @method('PATCH')
+                <label for="home_village_id" class="form-label">Mon village de résidence</label>
+                <div class="d-flex gap-2">
+                    <select id="home_village_id" name="home_village_id" class="form-select">
+                        <option value="">Choisir…</option>
+                        @foreach ($villages as $village)
+                            <option value="{{ $village->id }}" @selected($user->home_village_id === $village->id)>{{ $village->name }}</option>
+                        @endforeach
+                    </select>
+                    <button class="btn btn-soft">Enregistrer</button>
+                </div>
+                <div class="field-hint">{{ config('cleancomores.due_amount') }} {{ config('cleancomores.currency') }} à chaque passage du camion dans ce village.</div>
+            </form>
+            <div class="panel py-1">
+                @forelse ($dues as $due)
+                    <div class="row-item">
+                        <span class="icon-chip {{ $due->status === \App\Enums\DueStatus::Payee ? 'ico-leaf' : 'ico-red' }}"><i class="bi bi-receipt"></i></span>
+                        <span class="flex-grow-1">
+                            <span class="row-title d-block">{{ $due->amountLabel() }} · {{ $due->passage->village->name }}</span>
+                            <span class="row-sub">Passage du {{ $due->passage->passed_on->translatedFormat('l j F') }} · {{ $due->passage->truck->name }}</span>
+                        </span>
+                        @if ($due->isPaid())
+                            <a href="{{ route('dues.receipt', $due) }}" class="btn btn-soft btn-sm"><i class="bi bi-qr-code"></i> Preuve</a>
+                        @else
+                            <form method="POST" action="{{ route('dues.pay', $due) }}">
+                                @csrf
+                                <button class="btn btn-primary btn-sm">Payer</button>
+                            </form>
+                        @endif
+                    </div>
+                @empty
+                    <div class="empty py-3"><strong>Aucune redevance</strong>Elle apparaîtra ici quand le camion passera dans votre village.</div>
+                @endforelse
+            </div>
+        @endif
+
         <div class="section-title"><h2>Mes engagements</h2></div>
         <div class="panel py-1">
             @forelse ($engagedReports as $report)

@@ -32,6 +32,7 @@ class RouteController extends Controller
                 ->pluck('route_stop_id')
                 ->all(),
             'notices' => $truck->notices()->recent()->get(),
+            'passedVillageIds' => $truck->passages()->whereDate('passed_on', today())->pluck('village_id')->all(),
             'kinds' => NoticeKind::cases(),
         ]);
     }

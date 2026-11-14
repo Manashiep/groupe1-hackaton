@@ -20,7 +20,7 @@ class User extends Authenticatable implements FilamentUser
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'phone', 'password', 'role', 'truck_id', 'village_id', 'is_active',
+        'name', 'email', 'phone', 'password', 'role', 'truck_id', 'village_id', 'home_village_id', 'is_active',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -45,6 +45,18 @@ class User extends Authenticatable implements FilamentUser
     public function village(): BelongsTo
     {
         return $this->belongsTo(Village::class);
+    }
+
+    /** Village de résidence : c'est là que l'habitant paie la redevance quand le camion passe. */
+    public function homeVillage(): BelongsTo
+    {
+        return $this->belongsTo(Village::class, 'home_village_id');
+    }
+
+    /** Redevances de l'habitant, les plus récentes d'abord. */
+    public function dues(): HasMany
+    {
+        return $this->hasMany(Due::class)->latest();
     }
 
     public function reports(): HasMany
@@ -105,6 +117,11 @@ class User extends Authenticatable implements FilamentUser
     public function hasRole(Role ...$roles): bool
     {
         return in_array($this->role, $roles, true);
+    }
+
+    public function isCitizen(): bool
+    {
+        return $this->role === Role::Citoyen;
     }
 
     public function isAgent(): bool

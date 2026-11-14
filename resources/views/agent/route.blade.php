@@ -20,7 +20,15 @@
             @forelse ($slots as $slot)
                 <div class="slot">
                     <span class="time">{{ $slot->timeRange() }}</span>
-                    <span class="fw-bold">{{ $slot->village->name }}</span>
+                    <span class="fw-bold flex-grow-1">{{ $slot->village->name }}</span>
+                    @if (in_array($slot->village_id, $passedVillageIds, true))
+                        <span class="pill st-nettoye"><i class="bi bi-check2"></i> Passé</span>
+                    @else
+                        <form method="POST" action="{{ route('agent.passages.store', $slot->village) }}" onsubmit="return confirm('Confirmer le passage à {{ $slot->village->name }} ? Les habitants recevront leur redevance.')">
+                            @csrf
+                            <button class="btn btn-primary btn-sm">Passage terminé</button>
+                        </form>
+                    @endif
                 </div>
             @empty
                 <div class="slot"><i class="bi bi-cup-hot"></i> Pas de ramassage prévu aujourd'hui.</div>
@@ -67,6 +75,12 @@
                     <p class="text-muted mb-0">Le responsable n'a pas encore tracé votre itinéraire.</p>
                 @endforelse
             </div>
+
+            <div class="section-title"><h2>Vérifier un paiement</h2></div>
+            <form method="GET" action="{{ route('agent.receipts.check') }}" class="panel d-flex gap-2">
+                <input name="code" class="form-control text-uppercase" placeholder="Code CC-XXXXXX montré par l'habitant" autocomplete="off" required aria-label="Code de paiement">
+                <button class="btn btn-primary">Vérifier</button>
+            </form>
 
             <div class="section-title" id="prevenir"><h2>Prévenir les habitants</h2></div>
             <form method="POST" action="{{ route('agent.notices.store') }}" class="panel">

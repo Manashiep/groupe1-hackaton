@@ -6,14 +6,31 @@ use App\Http\Controllers\AssociationManagementController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\MapController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\PickupRequestController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SimuPay;
 use App\Http\Controllers\TruckCalendarController;
 use App\Http\Controllers\TruckComplaintController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => auth()->check() ? redirect(auth()->user()->homeUrl()) : view('welcome'))->name('home');
+
+/*
+| SimuPay : fausse passerelle de paiement, comme si c'était une autre entreprise.
+| On la lance sur un second serveur (php artisan serve --port=8001) pour simuler un service extérieur.
+*/
+Route::prefix('simupay')->name('simupay.')->group(function () {
+    Route::post('/api/payments', [SimuPay\ApiController::class, 'store'])->name('api.store');
+    Route::get('/api/payments/{transaction}', [SimuPay\ApiController::class, 'show'])->name('api.show');
+    Route::get('/checkout/{transaction}', [SimuPay\CheckoutController::class, 'show'])->name('checkout.show');
+    Route::post('/checkout/{transaction}', [SimuPay\CheckoutController::class, 'confirm'])->name('checkout.confirm');
+});
+
+// Webhook : SimuPay prévient CleanComores du résultat d'un paiement (adresse publique, message signé).
+Route::post('/paiements/webhook', PaymentWebhookController::class)->name('payments.webhook');
 
 Route::middleware('guest')->group(function () {
     Route::get('/connexion', [LoginController::class, 'create'])->name('login');
@@ -29,6 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:citoyen,agent')->group(function () {
         Route::get('/carte', [MapController::class, 'index'])->name('map');
         Route::get('/moi', [ProfileController::class, 'index'])->name('profile');
+        Route::patch('/moi/village', [ProfileController::class, 'updateHomeVillage'])->name('profile.home-village');
 
         Route::get('/signaler', [ReportController::class, 'create'])->name('reports.create');
         Route::post('/signaler', [ReportController::class, 'store'])->name('reports.store');
@@ -69,6 +87,11 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:citoyen')->group(function () {
         Route::get('/camion', [TruckCalendarController::class, 'index'])->name('trucks.index');
         Route::post('/camion/{truck}/probleme', [TruckComplaintController::class, 'store'])->name('trucks.complaints.store');
+
+        // Redevance : payer via SimuPay, revenir du paiement, montrer la preuve au camionneur.
+        Route::post('/redevances/{due}/payer', [PaymentController::class, 'pay'])->name('dues.pay');
+        Route::get('/redevances/{due}/preuve', [PaymentController::class, 'receipt'])->name('dues.receipt');
+        Route::get('/paiements/{payment}', [PaymentController::class, 'show'])->name('payments.show');
     });
 
     // Agents de collecte : tournée, planning et alertes aux habitants.
@@ -77,5 +100,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/tournee/points/{stop}', [Agent\RouteController::class, 'toggleStop'])->name('stops.toggle');
         Route::get('/planning', [Agent\PlanningController::class, 'index'])->name('planning');
         Route::post('/alertes', [Agent\TruckNoticeController::class, 'store'])->name('notices.store');
+        Route::post('/passages/{village}', [Agent\TruckPassageController::class, 'store'])->name('passages.store');
+        Route::get('/verifier-paiement', Agent\ReceiptCheckController::class)->name('receipts.check');
     });
 });

@@ -17,6 +17,7 @@ use App\Models\RouteStopVisit;
 use App\Models\Truck;
 use App\Models\TruckComplaint;
 use App\Models\TruckNotice;
+use App\Models\TruckPassage;
 use App\Models\User;
 use App\Models\Village;
 use Illuminate\Database\Seeder;
@@ -94,11 +95,20 @@ class DatabaseSeeder extends Seeder
 
         $citizen = User::create([
             'name' => 'Nadia Abdallah', 'email' => 'citoyen@cleancomores.km', 'password' => $password,
-            'village_id' => $villages['Badjanani']->id, 'phone' => '+269 321 45 67',
+            'village_id' => $villages['Badjanani']->id, 'home_village_id' => $villages['Badjanani']->id, 'phone' => '+269 321 45 67',
         ]);
-        $ahmed = User::create(['name' => 'Ahmed Combo', 'email' => 'asso@cleancomores.km', 'password' => $password, 'phone' => '+269 332 10 10']);
-        [$faiza, $ibrahim, $anrifa, $kamal] = collect(['Faïza Mohamed', 'Ibrahim Mzé', 'Anrifa Saïd', 'Kamal Bacar'])
-            ->map(fn (string $name): User => User::create(['name' => $name, 'email' => str($name)->slug('.').'@exemple.km', 'password' => $password]))
+        $ahmed = User::create([
+            'name' => 'Ahmed Combo', 'email' => 'asso@cleancomores.km', 'password' => $password, 'phone' => '+269 332 10 10',
+            'home_village_id' => $villages['Badjanani']->id,
+        ]);
+        // Village de résidence de chaque habitant : c'est là qu'il paie la redevance.
+        [$faiza, $ibrahim, $anrifa, $kamal] = collect([
+            ['Faïza Mohamed', 'Itsandra'], ['Ibrahim Mzé', 'Hadouja'], ['Anrifa Saïd', 'Hadouja'], ['Kamal Bacar', 'Mvouni'],
+        ])
+            ->map(fn (array $person): User => User::create([
+                'name' => $person[0], 'email' => str($person[0])->slug('.').'@exemple.km', 'password' => $password,
+                'home_village_id' => $villages[$person[1]]->id,
+            ]))
             ->all();
 
         // Associations : deux actives, une demande en attente de la mairie.
@@ -209,6 +219,15 @@ class DatabaseSeeder extends Seeder
             foreach ($trucks['Camion 1']->stops()->limit(2)->get() as $stop) {
                 RouteStopVisit::create(['route_stop_id' => $stop->id, 'user_id' => $agent->id, 'visit_date' => today()]);
             }
+        }
+
+        // Hier, le camion 1 est passé à Badjanani et Hadouja : les habitants ont une redevance à payer.
+        foreach (['Badjanani', 'Hadouja'] as $villageName) {
+            $passage = TruckPassage::create([
+                'truck_id' => $trucks['Camion 1']->id, 'village_id' => $villages[$villageName]->id,
+                'agent_id' => $agent->id, 'passed_on' => today()->subDay(),
+            ]);
+            $passage->chargeResidents();
         }
     }
 }
