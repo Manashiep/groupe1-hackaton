@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\EnsureUserHasRole;
+use App\Http\Middleware\EnsureUserIsActive;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,6 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias(['role' => EnsureUserHasRole::class]);
+        $middleware->web(append: [EnsureUserIsActive::class]);
+        $middleware->append(AddSecurityHeaders::class);
         // L'API de SimuPay est appelée par un serveur (pas un formulaire) : elle se protège par clé API, pas par jeton CSRF.
         // Idem pour le webhook : il est protégé par sa signature HMAC.
         $middleware->validateCsrfTokens(except: ['simupay/api/*', 'paiements/webhook']);

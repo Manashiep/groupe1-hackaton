@@ -4,7 +4,7 @@
 <div class="welcome">
     <div class="welcome-inner">
         <div>
-            <a class="brand mb-5 d-inline-flex" href="{{ route('home') }}"><span class="brand-mark">@include('partials.leaf')</span><span>Clean<b>Comores</b></span></a>
+            <a class="brand mb-5 d-inline-flex" href="{{ route('home') }}"><span class="brand-mark">@include('partials.leaf')</span><span>Eco<b>Com</b></span></a>
             <h1>Nos villages propres, <em>ensemble.</em></h1>
             <p class="lead fs-5 mt-3 mb-4">Signalez un dépôt sauvage, prenez-le en charge avec vos voisins ou une association, et sachez quand passe le camion.</p>
             <div class="d-grid d-sm-flex gap-2">

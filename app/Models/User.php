@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DueStatus;
 use App\Enums\MembershipStatus;
 use App\Enums\Role;
 use Database\Factories\UserFactory;
@@ -104,6 +105,28 @@ class User extends Authenticatable implements FilamentUser
     public function activeLedAssociation(): ?Association
     {
         return $this->ledAssociations()->active()->first();
+    }
+
+    /**
+     * Raison qui empêche de supprimer ce compte, ou null s'il peut l'être.
+     * Supprimer effacerait en cascade des paiements (trace comptable) ou une association entière :
+     * dans ces cas, la mairie désactive le compte au lieu de le supprimer.
+     */
+    public function deletionBlocker(?User $deletedBy = null): ?string
+    {
+        if ($deletedBy?->is($this)) {
+            return 'Vous ne pouvez pas supprimer votre propre compte.';
+        }
+
+        if ($this->dues()->where('status', DueStatus::Payee)->exists()) {
+            return 'A déjà payé des redevances : désactivez plutôt le compte pour garder la trace des paiements.';
+        }
+
+        if ($this->ledAssociations()->exists()) {
+            return 'Dirige une association : supprimer le compte supprimerait l\'association. Désactivez-le plutôt.';
+        }
+
+        return null;
     }
 
     /** « Nadia A. » : prénom et initiale, pour l'affichage public. */

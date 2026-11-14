@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 
 /**
  * API de SimuPay, la fausse passerelle de paiement.
- * C'est ce que CleanComores appelle « de l'extérieur », exactement comme on appellerait un vrai opérateur.
+ * C'est ce que EcoCom appelle « de l'extérieur », exactement comme on appellerait un vrai opérateur.
  *
  *   POST /simupay/api/payments        → créer un paiement (renvoie l'adresse de la page de paiement)
  *   GET  /simupay/api/payments/{id}   → connaître l'état d'un paiement

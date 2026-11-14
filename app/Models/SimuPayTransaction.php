@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 /**
  * Transaction côté SimuPay (la fausse passerelle). Elle n'a aucun lien direct avec les tables de
- * CleanComores : seule la « merchant_reference » permet au marchand de s'y retrouver.
+ * EcoCom : seule la « merchant_reference » permet au marchand de s'y retrouver.
  */
 class SimuPayTransaction extends Model
 {

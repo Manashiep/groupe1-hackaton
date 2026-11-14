@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Tentatives de paiement, côté CleanComores. Un dû peut avoir plusieurs tentatives
+     * Tentatives de paiement, côté EcoCom. Un dû peut avoir plusieurs tentatives
      * (ex. « solde insuffisant » puis réussite) : c'est pour ça que ce n'est pas le dû lui-même.
      */
     public function up(): void

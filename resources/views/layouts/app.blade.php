@@ -27,7 +27,7 @@
 <header class="topbar">
     <a class="brand" href="{{ $user->homeUrl() }}">
         <span class="brand-mark">@include('partials.leaf')</span>
-        <span>Clean<b>Comores</b></span>
+        <span>Eco<b>Com</b></span>
     </a>
     <nav class="toptabs" aria-label="Navigation principale">
         @foreach (array_filter($tabs) as [$route, $pattern, $icon, $label])

@@ -1,4 +1,4 @@
-# CleanComores
+# EcoCom
 
 **Gestion participative des déchets aux Comores.**
 « Une ville propre commence par une communauté engagée. »

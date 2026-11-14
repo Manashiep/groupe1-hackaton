@@ -34,8 +34,8 @@ return [
     */
     'simupay' => [
         'url' => env('SIMUPAY_URL', 'http://127.0.0.1:8001/simupay'),
-        'secret_key' => env('SIMUPAY_SECRET_KEY'),       // CleanComores → SimuPay : « c'est bien moi »
-        'webhook_secret' => env('SIMUPAY_WEBHOOK_SECRET'), // SimuPay → CleanComores : signature des confirmations
+        'secret_key' => env('SIMUPAY_SECRET_KEY'),       // EcoCom → SimuPay : « c'est bien moi »
+        'webhook_secret' => env('SIMUPAY_WEBHOOK_SECRET'), // SimuPay → EcoCom : signature des confirmations
     ],
 
     'slack' => [

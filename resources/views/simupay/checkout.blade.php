@@ -1,4 +1,4 @@
-{{-- Page de paiement de SimuPay. Volontairement différente de CleanComores : c'est « un autre site ». --}}
+{{-- Page de paiement de SimuPay. Volontairement différente de EcoCom : c'est « un autre site ». --}}
 <!doctype html>
 <html lang="fr">
 <head>
@@ -25,7 +25,7 @@
     </div>
     <div class="p-4">
         <div class="text-muted small">Payer à</div>
-        <div class="fw-bold">CleanComores</div>
+        <div class="fw-bold">EcoCom</div>
         <div class="text-muted small mt-1">{{ $transaction->description }}</div>
         <div class="sp-amount my-3">{{ number_format($transaction->amount, 0, ',', ' ') }} {{ $transaction->currency }}</div>
 

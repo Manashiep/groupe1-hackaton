@@ -6,7 +6,7 @@ use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
 /**
- * État d'une tentative de paiement, tel que CleanComores le connaît.
+ * État d'une tentative de paiement, tel que EcoCom le connaît.
  */
 enum PaymentStatus: string implements HasColor, HasLabel
 {

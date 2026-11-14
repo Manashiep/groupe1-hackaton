@@ -22,15 +22,15 @@ Route::get('/', fn () => auth()->check() ? redirect(auth()->user()->homeUrl()) :
 | SimuPay : fausse passerelle de paiement, comme si c'était une autre entreprise.
 | On la lance sur un second serveur (php artisan serve --port=8001) pour simuler un service extérieur.
 */
-Route::prefix('simupay')->name('simupay.')->group(function () {
+Route::prefix('simupay')->name('simupay.')->middleware('throttle:60,1')->group(function () {
     Route::post('/api/payments', [SimuPay\ApiController::class, 'store'])->name('api.store');
     Route::get('/api/payments/{transaction}', [SimuPay\ApiController::class, 'show'])->name('api.show');
     Route::get('/checkout/{transaction}', [SimuPay\CheckoutController::class, 'show'])->name('checkout.show');
     Route::post('/checkout/{transaction}', [SimuPay\CheckoutController::class, 'confirm'])->name('checkout.confirm');
 });
 
-// Webhook : SimuPay prévient CleanComores du résultat d'un paiement (adresse publique, message signé).
-Route::post('/paiements/webhook', PaymentWebhookController::class)->name('payments.webhook');
+// Webhook : SimuPay prévient EcoCom du résultat d'un paiement (adresse publique, message signé).
+Route::post('/paiements/webhook', PaymentWebhookController::class)->name('payments.webhook')->middleware('throttle:60,1');
 
 Route::middleware('guest')->group(function () {
     Route::get('/connexion', [LoginController::class, 'create'])->name('login');
@@ -49,7 +49,7 @@ Route::middleware('auth')->group(function () {
         Route::patch('/moi/village', [ProfileController::class, 'updateHomeVillage'])->name('profile.home-village');
 
         Route::get('/signaler', [ReportController::class, 'create'])->name('reports.create');
-        Route::post('/signaler', [ReportController::class, 'store'])->name('reports.store');
+        Route::post('/signaler', [ReportController::class, 'store'])->name('reports.store')->middleware('throttle:5,1');
         Route::get('/signalements/{report}', [ReportController::class, 'show'])->name('reports.show');
         Route::post('/signalements/{report}/prendre', [ReportController::class, 'take'])->name('reports.take');
         Route::post('/signalements/{report}/commencer', [ReportController::class, 'start'])->name('reports.start');
@@ -58,7 +58,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/signalements/{report}/abandonner', [ReportController::class, 'release'])->name('reports.release');
 
         Route::get('/demandes/nouvelle', [PickupRequestController::class, 'create'])->name('pickups.create');
-        Route::post('/demandes', [PickupRequestController::class, 'store'])->name('pickups.store');
+        Route::post('/demandes', [PickupRequestController::class, 'store'])->name('pickups.store')->middleware('throttle:5,1');
         Route::get('/demandes/{pickup}', [PickupRequestController::class, 'show'])->name('pickups.show');
         Route::post('/demandes/{pickup}/prendre', [PickupRequestController::class, 'take'])->name('pickups.take');
         Route::post('/demandes/{pickup}/reporter', [PickupRequestController::class, 'postpone'])->name('pickups.postpone');
@@ -76,7 +76,7 @@ Route::middleware('auth')->group(function () {
         Route::prefix('associations/{association}/gerer')->name('associations.manage.')->group(function () {
             Route::get('/', [AssociationManagementController::class, 'show'])->name('show');
             Route::patch('/', [AssociationManagementController::class, 'update'])->name('update');
-            Route::post('/publications', [AssociationManagementController::class, 'storePost'])->name('posts.store');
+            Route::post('/publications', [AssociationManagementController::class, 'storePost'])->name('posts.store')->middleware('throttle:10,1');
             Route::delete('/publications/{post}', [AssociationManagementController::class, 'destroyPost'])->name('posts.destroy');
             Route::post('/adhesions/{membership}/accepter', [AssociationManagementController::class, 'acceptMember'])->name('members.accept');
             Route::post('/adhesions/{membership}/refuser', [AssociationManagementController::class, 'refuseMember'])->name('members.refuse');
@@ -86,10 +86,10 @@ Route::middleware('auth')->group(function () {
     // Citoyens : calendrier des camions par village et signalement d'un problème de camion.
     Route::middleware('role:citoyen')->group(function () {
         Route::get('/camion', [TruckCalendarController::class, 'index'])->name('trucks.index');
-        Route::post('/camion/{truck}/probleme', [TruckComplaintController::class, 'store'])->name('trucks.complaints.store');
+        Route::post('/camion/{truck}/probleme', [TruckComplaintController::class, 'store'])->name('trucks.complaints.store')->middleware('throttle:5,1');
 
         // Redevance : payer via SimuPay, revenir du paiement, montrer la preuve au camionneur.
-        Route::post('/redevances/{due}/payer', [PaymentController::class, 'pay'])->name('dues.pay');
+        Route::post('/redevances/{due}/payer', [PaymentController::class, 'pay'])->name('dues.pay')->middleware('throttle:5,1');
         Route::get('/redevances/{due}/preuve', [PaymentController::class, 'receipt'])->name('dues.receipt');
         Route::get('/paiements/{payment}', [PaymentController::class, 'show'])->name('payments.show');
     });
@@ -101,6 +101,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/planning', [Agent\PlanningController::class, 'index'])->name('planning');
         Route::post('/alertes', [Agent\TruckNoticeController::class, 'store'])->name('notices.store');
         Route::post('/passages/{village}', [Agent\TruckPassageController::class, 'store'])->name('passages.store');
-        Route::get('/verifier-paiement', Agent\ReceiptCheckController::class)->name('receipts.check');
+        Route::get('/verifier-paiement', Agent\ReceiptCheckController::class)->name('receipts.check')->middleware('throttle:30,1');
     });
 });

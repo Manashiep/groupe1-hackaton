@@ -15,7 +15,7 @@ use Illuminate\View\View;
 /**
  * Paiement de la redevance par l'habitant, via la passerelle SimuPay.
  *
- *   1. pay()     : CleanComores appelle l'API de SimuPay et envoie l'habitant sur la page de paiement.
+ *   1. pay()     : EcoCom appelle l'API de SimuPay et envoie l'habitant sur la page de paiement.
  *   2. show()    : l'habitant revient ; on affiche le résultat (confirmé par le webhook).
  *   3. receipt() : la preuve de paiement à montrer au camionneur.
  */

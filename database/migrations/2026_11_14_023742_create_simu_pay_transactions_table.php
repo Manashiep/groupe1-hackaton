@@ -9,7 +9,7 @@ return new class extends Migration
     /**
      * Transactions de SimuPay, la fausse passerelle de paiement.
      * Dans la vraie vie, cette table serait chez l'opérateur (sur ses serveurs), pas chez nous :
-     * CleanComores ne la lit jamais directement, il passe toujours par l'API de SimuPay.
+     * EcoCom ne la lit jamais directement, il passe toujours par l'API de SimuPay.
      */
     public function up(): void
     {

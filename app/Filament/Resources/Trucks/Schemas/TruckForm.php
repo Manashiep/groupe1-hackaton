@@ -29,7 +29,10 @@ class TruckForm
                             ->multiple()
                             ->preload()
                             ->required(),
-                        ColorPicker::make('color')->label('Couleur sur la carte')->default('#1d6b47')->required(),
+                        ColorPicker::make('color')->label('Couleur sur la carte')->default('#1d6b47')->required()
+                            // La couleur est injectée dans les cartes : seul un code #RRGGBB est accepté, jamais du texte libre.
+                            ->regex('/^#[0-9a-fA-F]{6}$/')
+                            ->validationMessages(['regex' => 'Choisissez une couleur au format #RRGGBB.']),
                     ]),
                 Section::make('Calendrier de ramassage')
                     ->description('Un créneau par village et par jour. Les habitants le voient dans l\'onglet « Camion ».')

@@ -11,13 +11,16 @@
         .route-n { width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 12px; }
     </style>
     <script>
+        // Les noms de villages et de points sont saisis à la main : on les affiche comme du texte, jamais comme du HTML.
+        const escapeHtml = (value) => { const div = document.createElement('div'); div.textContent = value ?? ''; return div.innerHTML; };
+
         window.routeEditor = (config) => ({
             map: null,
             layer: null,
             init() {
                 this.map = L.map(this.$refs.map).setView(config.center, 16);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(this.map);
-                config.villages.forEach((v) => L.circleMarker([v.lat, v.lng], { radius: 7, color: '#0b2a5b', weight: 2, fillColor: '#f5c518', fillOpacity: .9 }).addTo(this.map).bindTooltip(v.name, { permanent: true, direction: 'top', offset: [0, -6] }));
+                config.villages.forEach((v) => L.circleMarker([v.lat, v.lng], { radius: 7, color: '#0b2a5b', weight: 2, fillColor: '#f5c518', fillOpacity: .9 }).addTo(this.map).bindTooltip(escapeHtml(v.name), { permanent: true, direction: 'top', offset: [0, -6] }));
                 this.layer = L.layerGroup().addTo(this.map);
                 this.map.on('click', (e) => this.$wire.addStop(e.latlng.lat, e.latlng.lng));
                 this.draw(config.stops, true);
@@ -31,7 +34,7 @@
                 stops.forEach((s) => {
                     const icon = L.divIcon({ className: '', html: `<div class="route-pin" style="background:${config.color}">${s.n}</div>`, iconSize: [30, 30], iconAnchor: [15, 15] });
                     L.marker([s.lat, s.lng], { icon, draggable: true }).addTo(this.layer)
-                        .bindTooltip(s.label)
+                        .bindTooltip(escapeHtml(s.label))
                         .on('dragend', (e) => { const ll = e.target.getLatLng(); this.$wire.moveStop(s.id, ll.lat, ll.lng); });
                 });
                 if (fit && stops.length) {

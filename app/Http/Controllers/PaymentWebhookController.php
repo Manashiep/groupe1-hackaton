@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
  * Réception du webhook de SimuPay : « le paiement sp_… est réussi / a échoué ».
  *
  * Cette adresse est publique : n'importe qui peut y envoyer un message. On ne croit donc le message
- * que s'il est récent ET signé avec le secret que seuls SimuPay et CleanComores connaissent.
+ * que s'il est récent ET signé avec le secret que seuls SimuPay et EcoCom connaissent.
  */
 class PaymentWebhookController extends Controller
 {

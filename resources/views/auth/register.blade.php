@@ -6,7 +6,7 @@
 <div class="auth">
     <div class="auth-top">
         <div class="inner">
-            <a class="brand" href="{{ route('home') }}"><span class="brand-mark">@include('partials.leaf')</span><span>Clean<b>Comores</b></span></a>
+            <a class="brand" href="{{ route('home') }}"><span class="brand-mark">@include('partials.leaf')</span><span>Eco<b>Com</b></span></a>
             <h1>Rejoignez le mouvement</h1>
             <p class="mb-0">Gratuit, en moins d'une minute.</p>
         </div>

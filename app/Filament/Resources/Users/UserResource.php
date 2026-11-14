@@ -6,6 +6,7 @@ use App\Enums\Role;
 use App\Filament\Resources\Users\Pages\ManageUsers;
 use App\Models\User;
 use BackedEnum;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -74,7 +75,9 @@ class UserResource extends Resource
             ])
             ->recordActions([
                 EditAction::make(),
-                
+                DeleteAction::make()
+                    ->disabled(fn (User $record): bool => $record->deletionBlocker(auth()->user()) !== null)
+                    ->tooltip(fn (User $record): ?string => $record->deletionBlocker(auth()->user())),
             ]);
     }
 

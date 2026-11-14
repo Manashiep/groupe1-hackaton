@@ -167,4 +167,15 @@ class ReportControllerTest extends TestCase
             ->assertSee('Ibrahim M.')
             ->assertSee('Nettoyage prévu');
     }
+
+    public function test_reporting_is_limited_to_five_per_minute(): void
+    {
+        $citizen = User::factory()->create();
+
+        for ($attempt = 1; $attempt <= 5; $attempt++) {
+            $this->actingAs($citizen)->post(route('reports.store'))->assertRedirect();
+        }
+
+        $this->actingAs($citizen)->post(route('reports.store'))->assertTooManyRequests();
+    }
 }
