@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PickupStatus;
+use App\Enums\PointReason;
 use App\Http\Requests\TakeChargeRequest;
 use App\Models\PickupRequest;
 use App\Models\Village;
@@ -83,9 +84,16 @@ class PickupRequestController extends Controller
     public function finish(Request $request, PickupRequest $pickup): RedirectResponse
     {
         $this->ensureTaker($request, $pickup);
-        $pickup->update(['status' => PickupStatus::Effectuee, 'done_at' => now()]);
+        abort_if($pickup->status === PickupStatus::Effectuee, 409);
 
-        return back()->with('success', 'Collecte faite, merci !');
+        $request->validate(
+            ['proof_photo' => ['required', 'image', 'max:6144']],
+            ['proof_photo.required' => 'Ajoutez une photo une fois ramassé : c\'est la preuve de la collecte.'],
+        );
+
+        $pickup->markDone($request->file('proof_photo')->store('proofs', 'public'));
+
+        return back()->with('success', 'Collecte faite, merci ! +'.PointReason::Ramassage->points().' points pour vous.');
     }
 
     public function release(Request $request, PickupRequest $pickup): RedirectResponse

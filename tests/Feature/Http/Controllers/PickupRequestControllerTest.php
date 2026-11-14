@@ -7,6 +7,8 @@ use App\Models\PickupRequest;
 use App\Models\User;
 use App\Models\Village;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PickupRequestControllerTest extends TestCase
@@ -47,8 +49,22 @@ class PickupRequestControllerTest extends TestCase
         $this->actingAs($volunteer)->post(route('pickups.take', $pickup), ['planned_at' => today()->addDay()->format('Y-m-d 10:00')]);
         $this->assertSame(PickupStatus::PriseEnCharge, $pickup->fresh()->status);
 
-        $this->actingAs($volunteer)->post(route('pickups.finish', $pickup));
+        Storage::fake('public');
+        $this->actingAs($volunteer)->post(route('pickups.finish', $pickup), ['proof_photo' => UploadedFile::fake()->image('ramasse.jpg')]);
         $this->assertSame(PickupStatus::Effectuee, $pickup->fresh()->status);
+        $this->assertSame(30, (int) $volunteer->pointAwards()->sum('points'));
+    }
+
+    public function test_marking_done_requires_a_proof_photo(): void
+    {
+        $volunteer = User::factory()->create();
+        $pickup = PickupRequest::factory()->takenBy($volunteer)->create();
+
+        $this->actingAs($volunteer)
+            ->post(route('pickups.finish', $pickup))
+            ->assertSessionHasErrors('proof_photo');
+
+        $this->assertSame(PickupStatus::PriseEnCharge, $pickup->fresh()->status);
     }
 
     public function test_only_the_volunteer_can_mark_the_pickup_done(): void

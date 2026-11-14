@@ -4,6 +4,7 @@ namespace Tests\Feature\Http\Controllers;
 
 use App\Models\Association;
 use App\Models\Due;
+use App\Models\PointAward;
 use App\Models\Report;
 use App\Models\TruckPassage;
 use App\Models\User;
@@ -14,6 +15,22 @@ use Tests\TestCase;
 class ProfileControllerTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_monthly_leaderboard_ranks_this_months_points_only(): void
+    {
+        $leader = User::factory()->create(['name' => 'Faïza Mohamed']);
+        $second = User::factory()->create(['name' => 'Ibrahim Mzé']);
+        PointAward::factory()->for($leader)->count(2)->create();
+        PointAward::factory()->for($second)->create();
+        PointAward::factory()->for($second)->count(3)->create(['created_at' => now()->subMonthNoOverflow()]);
+
+        $this->actingAs($second)
+            ->get(route('profile'))
+            ->assertOk()
+            ->assertSeeInOrder(['Faïza M.', '60 pts', 'Ibrahim M.', '30 pts'])
+            ->assertSee('points ce mois · 2e')
+            ->assertViewHas('myRanking', fn (array $row): bool => $row['rank'] === 2);
+    }
 
     public function test_lists_engagements_reports_and_led_association(): void
     {

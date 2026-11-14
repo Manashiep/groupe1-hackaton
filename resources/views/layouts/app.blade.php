@@ -34,10 +34,11 @@
             <a href="{{ route($route) }}" class="{{ request()->routeIs($pattern) ? 'active' : '' }}">{{ $label }}</a>
         @endforeach
     </nav>
-    <button type="button" class="btn btn-primary btn-sm ms-auto d-none desktop-plus align-items-center gap-1" data-bs-toggle="offcanvas" data-bs-target="#action-sheet">
+    <div class="ms-auto">@include('partials.theme-toggle')</div>
+    <button type="button" class="btn btn-primary btn-sm d-none desktop-plus align-items-center gap-1" data-bs-toggle="offcanvas" data-bs-target="#action-sheet">
         <i class="bi bi-plus-lg"></i> Agir
     </button>
-    <a href="{{ route('profile') }}" class="avatar ms-auto ms-lg-2 text-decoration-none" aria-label="Mon profil">{{ $user->initials() }}</a>
+    <a href="{{ route('profile') }}" class="avatar text-decoration-none" aria-label="Mon profil">{{ $user->initials() }}</a>
 </header>
 
 <main>

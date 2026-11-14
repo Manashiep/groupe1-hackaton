@@ -31,6 +31,11 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
+        // Un habitant ne doit jamais être renvoyé vers l'espace mairie qu'il aurait tenté d'ouvrir avant de se connecter.
+        if (! $request->user()->isStaff() && str_starts_with((string) $request->session()->get('url.intended'), url('/admin'))) {
+            $request->session()->forget('url.intended');
+        }
+
         return redirect()->intended($request->user()->homeUrl());
     }
 

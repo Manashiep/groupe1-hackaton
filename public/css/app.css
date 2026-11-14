@@ -40,6 +40,30 @@
     --bs-secondary-color: var(--ink-3);
 }
 
+/* Thème sombre : mêmes variables, valeurs de nuit (fond vert très foncé, texte clair, statuts adoucis).
+   Le vert des boutons reste assez soutenu pour garder un texte blanc lisible. */
+[data-bs-theme="dark"] {
+    --leaf-900: #d3efdf;
+    --leaf-800: #a6dcbf;
+    --leaf-700: #2a8a5c;
+    --leaf-600: #52b485;
+    --leaf-100: #21412f;
+    --leaf-50: #182b21;
+    --ink: #e5eee9;
+    --ink-2: #c2cfc7;
+    --ink-3: #95a79d;
+    --line: #2b3a33;
+    --bg: #0f1613;
+    --surface: #17211c;
+    --amber-bg: #3b2d12;
+    --amber-ink: #f2d39c;
+    --bs-primary-rgb: 42, 138, 92;
+    --bs-link-color-rgb: 82, 180, 133;
+    --bs-link-color: var(--leaf-600);
+    --bs-link-hover-color: var(--leaf-800);
+    color-scheme: dark;
+}
+
 body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
 h1, h2, h3, h4, .h1, .h2, .h3, .h4, .h5, .h6 { font-weight: 700; letter-spacing: -.015em; color: var(--ink); text-wrap: balance; }
 p { text-wrap: pretty; }
@@ -132,6 +156,19 @@ a { text-underline-offset: 3px; }
 .hero h1 { font-size: 1.6rem; margin: 0; }
 .hero p { margin: .35rem 0 0; color: var(--ink-3); max-width: 52ch; }
 .hero .inner, .sheet .inner { max-width: 760px; margin: 0 auto; }
+.hero .inner.wide, .sheet .inner.wide { max-width: 1080px; }
+
+/* Page « Moi » : résumé en 3 chiffres, puis deux colonnes dès la tablette (activité | compte). */
+.stat-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+.stat-tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; min-width: 0; }
+.stat-tile b { display: block; font-size: 1.45rem; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink); }
+.stat-tile span { font-size: .8rem; color: var(--ink-3); }
+.profile-grid { display: grid; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 768px) {
+    .profile-grid { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 0 24px; align-items: start; }
+    .profile-col > .section-title:first-child { margin-top: 8px; }
+}
+.row-item.is-me { background: var(--leaf-50); margin: 0 -16px; padding-inline: 16px; }
 .sheet { padding: 14px 16px calc(var(--tabs) + 28px); }
 .page { padding: 20px 16px calc(var(--tabs) + 28px); max-width: 760px; margin: 0 auto; }
 
@@ -148,6 +185,12 @@ a.row-item:hover { color: var(--ink); }
 a.row-item:hover .row-title { color: var(--leaf-700); }
 .row-title { font-weight: 600; transition: color .15s; }
 .row-sub { font-size: .87rem; color: var(--ink-3); }
+
+/* Classement du mois : le podium en or, argent, bronze, les autres en neutre. */
+.rank-badge { width: 26px; height: 26px; border-radius: 50%; display: inline-grid; place-items: center; flex-shrink: 0; font-weight: 800; font-size: .8rem; background: var(--line); color: var(--ink-2); }
+.rank-badge.rank-1 { background: #f4c84a; color: #5a3d00; }
+.rank-badge.rank-2 { background: #d5dbe0; color: #34404a; }
+.rank-badge.rank-3 { background: #e3b48a; color: #5a3212; }
 .thumb { width: 54px; height: 54px; border-radius: 12px; overflow: hidden; background: var(--leaf-50); display: grid; place-items: center; color: var(--leaf-700); font-size: 1.25rem; flex-shrink: 0; }
 .thumb img { width: 100%; height: 100%; object-fit: cover; }
 .icon-chip { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 1.1rem; flex-shrink: 0; }
@@ -173,6 +216,14 @@ a.row-item:hover .row-title { color: var(--leaf-700); }
 .segmented { display: inline-flex; background: #e8eeea; border-radius: 12px; padding: 4px; gap: 4px; }
 .segmented a { padding: .42rem 1rem; border-radius: 9px; color: var(--ink-2); text-decoration: none; font-weight: 600; font-size: .9rem; }
 .segmented a.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(23, 35, 29, .12); }
+
+/* Choix du thème (barre du haut et pages de connexion) : trois icônes, celle choisie ressort. */
+.theme-switch { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--leaf-50); border: 1px solid var(--line); }
+.theme-switch button { width: 30px; height: 30px; border: 0; border-radius: 50%; background: transparent; color: var(--ink-3); display: grid; place-items: center; font-size: .92rem; transition: background-color .15s, color .15s; }
+.theme-switch button:hover { color: var(--ink); }
+.theme-switch button.active { background: var(--surface); color: var(--leaf-600); box-shadow: 0 1px 3px rgba(0, 0, 0, .18); }
+.theme-switch button:focus-visible { outline: 3px solid rgba(29, 107, 71, .35); outline-offset: 1px; }
+.guest-theme { position: fixed; top: 14px; right: 14px; z-index: var(--z-nav); }
 
 /* Carte plein écran -------------------------------------------------------- */
 .map-screen { position: relative; height: calc(100dvh - var(--top) - var(--tabs)); }
@@ -266,6 +317,31 @@ a.row-item:hover .row-title { color: var(--leaf-700); }
 .ico-leaf { background: var(--leaf-50); color: var(--leaf-700); }
 .ico-amber { background: var(--amber-bg); color: #8a5a07; }
 .ico-blue { background: #e7eefa; color: #2a5296; }
+
+/* Thème sombre : couleurs écrites en dur ci-dessus (statuts, icônes, boutons foncés au survol) ---------- */
+[data-bs-theme="dark"] .btn-primary,
+[data-bs-theme="dark"] .btn-success { --bs-btn-hover-bg: #237a51; --bs-btn-hover-border-color: #237a51; --bs-btn-active-bg: #1d6b47; --bs-btn-active-border-color: #1d6b47; }
+[data-bs-theme="dark"] .btn-ghost { --bs-btn-hover-border-color: #3d4f46; }
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select { border-color: #34463d; }
+[data-bs-theme="dark"] .form-control::placeholder { color: #7f9187; }
+[data-bs-theme="dark"] .st-nouveau, [data-bs-theme="dark"] .st-en_attente, [data-bs-theme="dark"] .flash-error, [data-bs-theme="dark"] .ico-red { background: #3e1f19; color: #f4a493; }
+[data-bs-theme="dark"] .st-pris_en_charge, [data-bs-theme="dark"] .st-prise_en_charge, [data-bs-theme="dark"] .pill-accent, [data-bs-theme="dark"] .ico-amber { color: #f1c56f; }
+[data-bs-theme="dark"] .st-en_cours, [data-bs-theme="dark"] .ico-blue { background: #1b2a45; color: #a3c0f2; }
+[data-bs-theme="dark"] .st-nettoye, [data-bs-theme="dark"] .st-effectuee { background: #193727; color: #93d8b0; }
+[data-bs-theme="dark"] .st-rejete, [data-bs-theme="dark"] .st-refusee { background: #26302b; color: #b6c3bc; }
+[data-bs-theme="dark"] .chip:hover { border-color: #3d4f46; }
+[data-bs-theme="dark"] .segmented { background: #0b110e; }
+[data-bs-theme="dark"] .media-hero { background: #1b2520; }
+@supports (background: color-mix(in srgb, red 10%, white)) {
+    [data-bs-theme="dark"] .cover { background: color-mix(in srgb, var(--asso, var(--leaf-700)) 14%, var(--surface)); }
+    [data-bs-theme="dark"] .asso-card { background: color-mix(in srgb, var(--asso) 14%, var(--surface)); border-color: color-mix(in srgb, var(--asso) 35%, var(--surface)); }
+}
+/* Cartes : bulles sombres, fond de carte légèrement assombri pour ne pas éblouir la nuit. */
+[data-bs-theme="dark"] .leaflet-popup-content-wrapper,
+[data-bs-theme="dark"] .leaflet-popup-tip { background: var(--surface); color: var(--ink); }
+[data-bs-theme="dark"] .leaflet-tile-pane { filter: brightness(.82) contrast(1.05); }
+[data-bs-theme="dark"] .leaflet-bar a { background: var(--surface); color: var(--ink); border-color: var(--line); }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }

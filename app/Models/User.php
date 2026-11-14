@@ -96,6 +96,11 @@ class User extends Authenticatable implements FilamentUser
             ->wherePivot('status', MembershipStatus::Membre->value);
     }
 
+    public function pointAwards(): HasMany
+    {
+        return $this->hasMany(PointAward::class);
+    }
+
     public function ledAssociations(): HasMany
     {
         return $this->hasMany(Association::class, 'leader_id');

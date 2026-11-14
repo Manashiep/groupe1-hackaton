@@ -30,6 +30,16 @@ class MapControllerTest extends TestCase
                 === ['Canapé à ramasser', 'Dépôt pris en charge', 'Dépôt à nettoyer']);
     }
 
+    public function test_cleaned_report_stays_on_the_map_for_24_hours(): void
+    {
+        Report::factory()->create(['description' => 'Nettoyé ce matin', 'status' => ReportStatus::Nettoye, 'cleaned_at' => now()->subHours(3)]);
+        Report::factory()->create(['description' => 'Nettoyé avant-hier', 'status' => ReportStatus::Nettoye, 'cleaned_at' => now()->subHours(25)]);
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('map'))
+            ->assertViewHas('points', fn ($points): bool => $points->pluck('description')->all() === ['Nettoyé ce matin']);
+    }
+
     public function test_taken_report_exposes_the_volunteer_and_planned_date(): void
     {
         $report = Report::factory()->takenBy(User::factory()->create(['name' => 'Anrifa Saïd']))->create();

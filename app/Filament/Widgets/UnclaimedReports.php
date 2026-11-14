@@ -19,7 +19,7 @@ class UnclaimedReports extends TableWidget
 {
     protected static ?string $heading = 'Dépôts sans volontaire';
 
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 4;
 
     public function table(Table $table): Table
     {

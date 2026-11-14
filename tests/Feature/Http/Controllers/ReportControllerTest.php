@@ -4,6 +4,7 @@ namespace Tests\Feature\Http\Controllers;
 
 use App\Enums\ReportStatus;
 use App\Models\Association;
+use App\Models\PointAward;
 use App\Models\Report;
 use App\Models\User;
 use App\Models\Village;
@@ -127,10 +128,39 @@ class ReportControllerTest extends TestCase
         $this->assertTrue($report->cleanup_at->equalTo($newDate));
         $this->assertSame('Il reste les gravats', $report->taker_note);
 
-        $this->actingAs($taker)->post(route('reports.finish', $report));
+        Storage::fake('public');
+        $this->actingAs($taker)->post(route('reports.finish', $report), ['proof_photo' => UploadedFile::fake()->image('propre.jpg')]);
         $report->refresh();
         $this->assertSame(ReportStatus::Nettoye, $report->status);
         $this->assertNotNull($report->cleaned_at);
+        Storage::disk('public')->assertExists($report->proof_photo_path);
+    }
+
+    public function test_finishing_without_a_proof_photo_is_refused(): void
+    {
+        $taker = User::factory()->create();
+        $report = Report::factory()->takenBy($taker)->create();
+
+        $this->actingAs($taker)
+            ->post(route('reports.finish', $report))
+            ->assertSessionHasErrors('proof_photo');
+
+        $this->assertSame(ReportStatus::PrisEnCharge, $report->fresh()->status);
+        $this->assertSame(0, PointAward::count());
+    }
+
+    public function test_cleaning_gives_points_to_the_reporter_and_the_cleaner_once(): void
+    {
+        Storage::fake('public');
+        $reporter = User::factory()->create();
+        $cleaner = User::factory()->create();
+        $report = Report::factory()->for($reporter)->takenBy($cleaner)->create();
+
+        $this->actingAs($cleaner)->post(route('reports.finish', $report), ['proof_photo' => UploadedFile::fake()->image('propre.jpg')]);
+        $this->actingAs($cleaner)->post(route('reports.finish', $report), ['proof_photo' => UploadedFile::fake()->image('encore.jpg')]);
+
+        $this->assertSame(10, (int) $reporter->pointAwards()->sum('points'));
+        $this->assertSame(30, (int) $cleaner->pointAwards()->sum('points'));
     }
 
     public function test_only_the_taker_can_finish_a_report(): void

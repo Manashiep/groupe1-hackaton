@@ -104,7 +104,7 @@
 @push('head')
 <style>
     .color-swatch i { opacity: 0; transition: opacity .15s; }
-    .color-radio:checked + .color-swatch { box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--ink); }
+    .color-radio:checked + .color-swatch { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--ink); }
     .color-radio:checked + .color-swatch i { opacity: 1; }
 </style>
 @endpush

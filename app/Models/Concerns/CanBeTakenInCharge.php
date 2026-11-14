@@ -5,6 +5,7 @@ namespace App\Models\Concerns;
 use App\Models\Association;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Signalements et demandes de collecte sont pris en charge par un citoyen,
@@ -25,6 +26,12 @@ trait CanBeTakenInCharge
     public function isTakenBy(?User $user): bool
     {
         return $user !== null && $this->taken_by_id === $user->id;
+    }
+
+    /** Photo « après » fournie par celui qui a nettoyé ou ramassé. */
+    public function proofPhotoUrl(): ?string
+    {
+        return $this->proof_photo_path ? Storage::disk('public')->url($this->proof_photo_path) : null;
     }
 
     /** « Moroni Propre » ou « Ahmed C. » */

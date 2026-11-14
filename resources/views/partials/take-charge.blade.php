@@ -1,8 +1,15 @@
 {{--
     Bloc « Je m'en occupe » partagé par les signalements et les demandes de collecte.
-    $item (Report|PickupRequest), $isOpen, $takeRoute, $plannedLabel, $plannedAt, $ledAssociation, $routes (start?, postpone, finish, release)
+    $item (Report|PickupRequest), $isOpen, $isDone, $takeRoute, $plannedLabel, $plannedAt, $ledAssociation, $routes (start?, postpone, finish, release)
 --}}
 @php($me = auth()->user())
+
+@if ($isDone && $item->proofPhotoUrl())
+    <figure class="panel mt-3 mb-0">
+        <img src="{{ $item->proofPhotoUrl() }}" alt="Photo de l'endroit après le passage" class="w-100" style="max-height:280px;object-fit:cover;border-radius:var(--radius)">
+        <figcaption class="row-sub mt-2"><i class="bi bi-patch-check-fill text-success"></i> Preuve envoyée par {{ $item->takerName() }}</figcaption>
+    </figure>
+@endif
 
 @if ($isOpen)
     <form method="POST" action="{{ $takeRoute }}" class="engage mt-3" novalidate>
@@ -22,7 +29,7 @@
         <input id="taker_note" name="taker_note" maxlength="300" class="form-control mb-3" value="{{ old('taker_note') }}" placeholder="Ex. : on vient à trois avec des sacs">
         <button class="btn btn-primary btn-lg w-100">Je m'engage</button>
     </form>
-@elseif ($item->isTakenBy($me))
+@elseif ($item->isTakenBy($me) && ! $isDone)
     <div class="panel mt-3">
         <div class="d-flex gap-3 align-items-center mb-3">
             <span class="icon-chip ico-amber"><i class="bi bi-person-check-fill"></i></span>
@@ -35,9 +42,23 @@
             @isset($routes['start'])
                 <form method="POST" action="{{ $routes['start'] }}">@csrf<button class="btn btn-soft w-100"><i class="bi bi-play-fill me-1"></i> Je commence maintenant</button></form>
             @endisset
-            <form method="POST" action="{{ $routes['finish'] }}">@csrf<button class="btn btn-success btn-lg w-100"><i class="bi bi-check2-circle me-1"></i> C'est fait !</button></form>
+            <button class="btn btn-success btn-lg w-100" type="button" data-bs-toggle="collapse" data-bs-target="#finish"><i class="bi bi-check2-circle me-1"></i> C'est fait !</button>
             <button class="btn btn-ghost w-100" type="button" data-bs-toggle="collapse" data-bs-target="#postpone">Pas fini ? Prévenir et changer la date</button>
         </div>
+        {{-- Preuve obligatoire : sans photo « après », pas de « Nettoyé » ni de points. --}}
+        <form method="POST" action="{{ $routes['finish'] }}" enctype="multipart/form-data" class="collapse mt-3 @if ($errors->has('proof_photo')) show @endif" id="finish">
+            @csrf
+            <label for="proof_photo" class="d-block mb-2" style="cursor:pointer">
+                <span class="panel d-flex align-items-center gap-3" id="proof-placeholder">
+                    <span class="icon-chip ico-leaf"><i class="bi bi-camera-fill"></i></span>
+                    <span><strong class="d-block">Photo de l'endroit propre</strong><span class="text-muted small">C'est la preuve pour les voisins et la mairie.</span></span>
+                </span>
+                <img id="proof-preview" alt="Aperçu de la photo" class="d-none w-100" style="max-height:240px;object-fit:cover;border-radius:var(--radius)">
+            </label>
+            <input type="file" name="proof_photo" id="proof_photo" accept="image/*" capture="environment" class="visually-hidden" required>
+            @error('proof_photo')<div class="text-danger small mb-2">{{ $message }}</div>@enderror
+            <button class="btn btn-success w-100"><i class="bi bi-send-fill me-1"></i> Envoyer la preuve</button>
+        </form>
         <form method="POST" action="{{ $routes['postpone'] }}" class="collapse mt-3" id="postpone">
             @csrf
             <label class="form-label" for="new_date">Nouvelle date</label>
@@ -51,4 +72,19 @@
             <button class="btn btn-link btn-sm text-muted">Je ne peux plus m'en occuper</button>
         </form>
     </div>
+@endif
+
+@if ($item->isTakenBy($me) && ! $isDone)
+    @push('scripts')
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        CC.compressPhotoInput(document.getElementById('proof_photo'), (url) => {
+            const preview = document.getElementById('proof-preview');
+            preview.src = url;
+            preview.classList.remove('d-none');
+            document.getElementById('proof-placeholder').classList.add('d-none');
+        });
+    });
+    </script>
+    @endpush
 @endif

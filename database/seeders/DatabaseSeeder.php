@@ -153,7 +153,7 @@ class DatabaseSeeder extends Seeder
             ['Badjanani', $citizen, ReportStatus::Nouveau, [0.0011, 0.0019], 0, null, null, null],
             ['Badjanani', $citizen, ReportStatus::PrisEnCharge, [-0.0017, 0.0008], 1, $ahmed, $moroniPropre, [1, '08:00']],
             ['Badjanani', $anrifa, ReportStatus::EnCours, [0.0004, -0.0021], 1, $ibrahim, null, [0, '16:00']],
-            ['Badjanani', $citizen, ReportStatus::Nettoye, [-0.0006, 0.0028], 6, $ahmed, $moroniPropre, [-4, '09:00']],
+            ['Badjanani', $citizen, ReportStatus::Nettoye, [-0.0006, 0.0028], 6, $ahmed, $moroniPropre, [0, '06:00']],
             ['Hadouja', $faiza, ReportStatus::Nouveau, [0.0012, -0.0009], 0, null, null, null],
             ['Hadouja', $ibrahim, ReportStatus::PrisEnCharge, [-0.0010, 0.0015], 2, $citizen, null, [2, '17:00']],
             ['Itsandra', $kamal, ReportStatus::Nouveau, [0.0008, 0.0012], 1, null, null, null],
@@ -183,6 +183,12 @@ class DatabaseSeeder extends Seeder
                 'created_at' => $created, 'updated_at' => $created,
             ]);
         }
+
+        // Points du mois pour les dépôts déjà nettoyés : le classement n'est pas vide à la démo.
+        Report::where('status', ReportStatus::Nettoye)->with(['user', 'taker'])->each(function (Report $report): void {
+            PointAward::award($report->user, PointReason::Signalement, $report);
+            PointAward::award($report->taker, PointReason::Nettoyage, $report);
+        });
 
         PickupRequest::create([
             'user_id' => $citizen->id, 'village_id' => $villages['Badjanani']->id,

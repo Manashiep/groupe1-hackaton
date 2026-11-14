@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\PickupStatus;
 use App\Enums\ReportStatus;
+use App\Models\PointAward;
 use App\Models\Village;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,9 +18,12 @@ class ProfileController extends Controller
     public function index(Request $request): View
     {
         $user = $request->user();
+        $ranking = PointAward::monthlyRanking();
 
         return view('profile', [
             'user' => $user,
+            'leaderboard' => $ranking->take(5),
+            'myRanking' => $ranking->first(fn (array $row): bool => $row['user']->is($user)),
             'villages' => Village::orderBy('name')->get(),
             'dues' => $user->dues()->with('passage.village', 'passage.truck')->limit(20)->get(),
             'engagedReports' => $user->takenReports()->whereIn('status', [ReportStatus::PrisEnCharge, ReportStatus::EnCours])->orderBy('cleanup_at')->get(),

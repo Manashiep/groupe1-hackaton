@@ -15,7 +15,7 @@ class ActivityChart extends ChartWidget
 
     protected ?string $maxHeight = '280px';
 
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 3;
 
     protected int|string|array $columnSpan = 'full';
 

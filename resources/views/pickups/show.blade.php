@@ -47,6 +47,7 @@
         @include('partials.take-charge', [
             'item' => $pickup,
             'isOpen' => $pickup->status === PickupStatus::EnAttente && $pickup->user_id !== auth()->id(),
+            'isDone' => $pickup->status === PickupStatus::Effectuee,
             'takeRoute' => route('pickups.take', $pickup),
             'plannedLabel' => $pickup->appointmentLabel(),
             'plannedAt' => $pickup->appointment_at,

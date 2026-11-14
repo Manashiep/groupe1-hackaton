@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PointReason;
 use App\Enums\ReportStatus;
 use App\Http\Requests\TakeChargeRequest;
 use App\Models\Report;
@@ -104,9 +105,16 @@ class ReportController extends Controller
     public function finish(Request $request, Report $report): RedirectResponse
     {
         $this->ensureTaker($request, $report);
-        $report->update(['status' => ReportStatus::Nettoye, 'cleaned_at' => now()]);
+        abort_if($report->status === ReportStatus::Nettoye, 409);
 
-        return back()->with('success', 'Bravo, la zone est nettoyée !');
+        $request->validate(
+            ['proof_photo' => ['required', 'image', 'max:6144']],
+            ['proof_photo.required' => 'Ajoutez une photo de l\'endroit propre : c\'est la preuve du nettoyage.'],
+        );
+
+        $report->markCleaned($request->file('proof_photo')->store('proofs', 'public'));
+
+        return back()->with('success', 'Bravo, la zone est nettoyée ! +'.PointReason::Nettoyage->points().' points pour vous.');
     }
 
     public function release(Request $request, Report $report): RedirectResponse

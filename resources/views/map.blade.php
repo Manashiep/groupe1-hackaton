@@ -12,6 +12,7 @@
         <span class="pill"><span class="dot" style="color:#d64a32"></span>À nettoyer</span>
         <span class="pill"><span class="dot" style="color:#d9941c"></span>Pris en charge</span>
         <span class="pill"><span class="dot" style="color:#3567c4"></span>En cours</span>
+        <span class="pill"><span class="dot" style="color:#2e8b57"></span>Nettoyé (24 h)</span>
         <span class="pill"><span class="dot" style="color:#3c4a5e;border-radius:3px"></span>Demande de collecte</span>
     </div>
 

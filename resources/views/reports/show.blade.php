@@ -56,6 +56,7 @@
     @include('partials.take-charge', [
         'item' => $report,
         'isOpen' => $report->status === ReportStatus::Nouveau,
+        'isDone' => $report->status === ReportStatus::Nettoye,
         'takeRoute' => route('reports.take', $report),
         'plannedLabel' => $report->cleanupLabel(),
         'plannedAt' => $report->cleanup_at,

@@ -17,7 +17,7 @@ class OpenTruckComplaints extends TableWidget
 {
     protected static ?string $heading = 'Problèmes de camion à traiter';
 
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 5;
 
     public function table(Table $table): Table
     {

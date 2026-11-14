@@ -39,7 +39,7 @@
                     <div class="fw-bold mb-2">Comptes de démo <span class="fw-normal">· mot de passe « password »</span></div>
                     <div class="d-flex flex-wrap gap-2">
                         @foreach (['citoyen@cleancomores.km' => 'Citoyen', 'asso@cleancomores.km' => 'Chef d\'asso', 'agent@cleancomores.km' => 'Agent', 'responsable@cleancomores.km' => 'Mairie'] as $email => $label)
-                            <button type="button" class="btn btn-sm bg-white demo-fill" data-email="{{ $email }}">{{ $label }}</button>
+                            <button type="button" class="btn btn-sm btn-ghost demo-fill" data-email="{{ $email }}">{{ $label }}</button>
                         @endforeach
                     </div>
                 </div>
